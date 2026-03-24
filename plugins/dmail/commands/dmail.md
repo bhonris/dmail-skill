@@ -341,7 +341,7 @@ Spawn three general-purpose agents simultaneously, each reviewing a different di
 
 After all three return:
 1. Consolidate into `review_items` in state:
-   - `must_fix`: bugs, security issues, broken tests, missing critical coverage
+   - `must_fix`: bugs, security issues, broken tests, missing critical coverage. For each item, the slug description must include the file reference from the reviewer (e.g. `[slug]: [description] ([file]:[line-range])`). Preserve the reviewer's specific location — do not summarize to a slug alone.
    - `nice_to_have`: style, minor refactors, non-critical improvements
 2. Update `DOSSIER.md` with review status — add a section: `## Review — Cycle [N]` with: total must-fix count, total nice-to-have count, and a bulleted list of each must-fix slug and one-line description.
 3. `git add -A && git commit -m "steiner: christina-review — [N] must-fix, [N] nice-to-have"`
@@ -377,17 +377,19 @@ The lab does not stop when criteria are met. It checkpoints and expands.
    - `pnpm build && pnpm preview &`
    - Navigate, screenshot (save to `screenshots/prod-smoke-cycle-[N].png`), walk flows
    - Kill server
-3. Polish `USAGE.md` — complete pass, ensure all working features are documented
+3. Polish `USAGE.md` — do a complete pass: open `documents/steiner-spec.md` and compare each **checked** acceptance criterion against the sections in `USAGE.md`. Add a section for every feature that is checked in the spec but not documented in USAGE.md. Expansion cycle features are especially likely to be missing.
 4. Write/update `README.md`:
    ```markdown
    # [project_name]
    [one-line description]
    ## Quick start
    [installation + first command]
+   ## Test coverage
+   [N] tests · [coverage_pct]% statement coverage
    ## Documentation
    See [USAGE.md](USAGE.md) for full usage and [DOSSIER.md](DOSSIER.md) for project decisions.
    ```
-5. Update `DOSSIER.md` — mark expansion cycle N complete, record what was achieved
+5. Update `DOSSIER.md` — mark expansion cycle N complete, record what was achieved. Specifically: update the `## Current status` or `## Overview` section (whichever exists) to set Phase to `[phase]`, Leap to `[leap_count]/[max_iterations]`, Cycle to `[expansion_cycle]`, and Divergence meter to `[coverage_pct]%`. If neither section exists, add `## Current status` at the top of the file.
 6. Update `documents/steiner-spec.md` Open Questions with all assumptions made this cycle
 7. Add checkpoint entry to `STEINER_LOG.md`: `## Worldline [N] Stabilised`
 

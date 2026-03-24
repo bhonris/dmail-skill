@@ -1,4 +1,5 @@
 fg_exp_*/
+.playwright-mcp/
 .claude/settings.json
 
 documents/recursive-mother-goose.md
