@@ -13,7 +13,7 @@ fi
 first_run=false
 [[ ! -f "$REPO_ROOT/documents/recursive-mother-goose.md" ]] && first_run=true
 
-bundle=$(base64 -d "$BUNDLE_FILE" | gunzip)
+bundle=$(tr -d '\r' < "$BUNDLE_FILE" | base64 -d | gunzip)
 
 current_file=""
 current_content=""
