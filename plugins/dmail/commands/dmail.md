@@ -38,9 +38,11 @@ Check whether Playwright MCP tools are present in your tool list (look for tools
   D-Mail cannot start. Playwright MCP is not running.
 
   Playwright is required for browser-level verification of web projects and is
-  non-negotiable. Start it before invoking /dmail:
+  non-negotiable. Add and start it before invoking /dmail:
 
-    npx @playwright/mcp@latest
+    claude mcp add playwright --transport stdio -- npx @playwright/mcp@latest
+
+  Then restart Claude Code and re-run /dmail.
 
   To skip this check (CLI/API projects only), re-run with --bypass-playwright.
   ```
@@ -289,7 +291,7 @@ If the same test fails 3 sessions in a row on the same feature:
   ```
   SERN interference: Playwright MCP is not running. Phase 3b cannot proceed.
   Commit current state, write phase: phase-3b-blocked to reading-steiner.md, and stop.
-  The user must start Playwright MCP (npx @playwright/mcp@latest) and re-invoke /dmail to continue.
+  The user must add and start Playwright MCP (claude mcp add playwright --transport stdio -- npx @playwright/mcp@latest), restart Claude Code, and re-invoke /dmail to continue.
   ```
   Then commit state and stop. Do NOT advance to Phase 4. Do NOT skip Phase 3b.
 
