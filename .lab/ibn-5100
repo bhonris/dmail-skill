@@ -10,6 +10,9 @@ if [[ ! -f "$BUNDLE_FILE" ]]; then
   exit 1
 fi
 
+first_run=false
+[[ ! -f "$REPO_ROOT/documents/recursive-mother-goose.md" ]] && first_run=true
+
 bundle=$(base64 -d "$BUNDLE_FILE" | gunzip)
 
 current_file=""
@@ -40,6 +43,19 @@ done <<< "$bundle"
 
 flush
 
-echo ""
-echo "Done. Remember to register the RMG stop hook if this is a fresh extract:"
-echo "  Run /update-config and add plugins/dmail/hooks/rmg-stop-hook.sh as a Stop hook."
+if [[ "$first_run" == true ]]; then
+  echo ""
+  echo "El Psy Kongroo."
+  echo ""
+  echo "You found it. This is Recursive Mother Goose — a self-improvement loop for the"
+  echo "D-Mail skill, hidden here as an easter egg for whoever dug deep enough to find it."
+  echo ""
+  echo "Start with documents/recursive-mother-goose.md."
+  echo ""
+  echo "Remember to register the RMG stop hook:"
+  echo "  Run /update-config and add plugins/dmail/hooks/rmg-stop-hook.sh as a Stop hook."
+else
+  echo ""
+  echo "Done. Remember to register the RMG stop hook if this is a fresh extract:"
+  echo "  Run /update-config and add plugins/dmail/hooks/rmg-stop-hook.sh as a Stop hook."
+fi
