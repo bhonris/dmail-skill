@@ -1,6 +1,5 @@
 fg_exp_*/
 
-# Recursive Mother Goose — easter egg skill (use .lab/ibn-5100 to extract)
 documents/recursive-mother-goose.md
 plugins/dmail/commands/recursive-mother-goose.md
 plugins/dmail/agents/rmg-*.md
