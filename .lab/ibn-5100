@@ -45,15 +45,14 @@ flush
 
 if [[ "$first_run" == true ]]; then
   echo ""
-  echo "El Psy Kongroo."
+  base64 -d <<< "RWwgUHN5IEtvbmdyb28uCgpZb3UgZm91bmQgaXQuIFRoaXMgaXMgUmVjdXJzaXZlIE1vdGhlciBH\
+b29zZSDigJQgYSBzZWxmLWltcHJvdmVtZW50IGxvb3AgZm9yIHRoZQpELU1haWwgc2tpbGwsIGhp\
+ZGRlbiBoZXJlIGFzIGFuIGVhc3RlciBlZ2cgZm9yIHdob2V2ZXIgZHVnIGRlZXAgZW5vdWdoIHRv\
+IGZpbmQgaXQuCgpTdGFydCB3aXRoIGRvY3VtZW50cy9yZWN1cnNpdmUtbW90aGVyLWdvb3NlLm1k\
+LgoKUmVtZW1iZXIgdG8gcmVnaXN0ZXIgdGhlIFJNRyBzdG9wIGhvb2s6CiAgUnVuIC91cGRhdGUt\
+Y29uZmlnIGFuZCBhZGQgcGx1Z2lucy9kbWFpbC9ob29rcy9ybWctc3RvcC1ob29rLnNoIGFzIGEg\
+U3RvcCBob29rLg=="
   echo ""
-  echo "You found it. This is Recursive Mother Goose — a self-improvement loop for the"
-  echo "D-Mail skill, hidden here as an easter egg for whoever dug deep enough to find it."
-  echo ""
-  echo "Start with documents/recursive-mother-goose.md."
-  echo ""
-  echo "Remember to register the RMG stop hook:"
-  echo "  Run /update-config and add plugins/dmail/hooks/rmg-stop-hook.sh as a Stop hook."
 else
   echo ""
   echo "Done. Remember to register the RMG stop hook if this is a fresh extract:"
