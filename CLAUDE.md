@@ -104,6 +104,16 @@ Skills are markdown files with structured prompt content. When editing:
 - `hooks/stop-hook.sh` — Bash script. Must remain POSIX-compatible; parses `reading-steiner.md` with `grep`/`sed`.
 - `hooks/hooks.json` — Declares which hooks fire on which events.
 
+## Experiments
+
+Skill test runs are kept out of git using the `fg_exp_` prefix convention:
+
+- D-Mail test projects are placed directly inside `claude_skills/` and named `fg_exp_<project_name>/` (e.g., `fg_exp_habit_tracker/`)
+- The root `.gitignore` excludes all `fg_exp_*/` directories
+- This keeps the skills repo clean while allowing throwaway experiment projects to live alongside it
+
+When running `/dmail` for skill testing, `cd` into `claude_skills/` first so the experiment directory is created here and automatically ignored.
+
 ## Thematic Naming (Steins;Gate)
 
 All naming is thematic — it's cosmetic, not functional:

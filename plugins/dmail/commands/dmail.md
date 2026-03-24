@@ -82,6 +82,8 @@ push_to_github: [true|false]
 ## Phase 0 — Future Gadget Lab Initialization
 
 1. Derive a short `project_name` from the prompt (snake_case, max 4 words)
+   - **If running inside the `claude_skills/` repo** (i.e., `plugins/` is present in the current directory): prefix with `fg_exp_` → `fg_exp_[project_name]`. These are automatically gitignored.
+   - Otherwise: use `[project_name]` as-is.
 2. Create a project directory: `mkdir [project_name] && cd [project_name]`
 3. Run `git init`
 4. Detect `project_type` from STACK_HINT or prompt keywords:
@@ -94,11 +96,14 @@ push_to_github: [true|false]
    - TypeScript/JavaScript → `pnpm test` (vitest)
    - Python → `pytest`
 6. Create `reading-steiner.md` with phase: `divergence-analysis`, leap_count: 0, expansion_cycle: 1, all other fields initialized
-7. Create stub files:
+7. Create `.gitignore` before the first commit:
+   - TypeScript/JS projects: `node_modules/\ndist/\ncoverage/\n*.tsbuildinfo`
+   - Python projects: `__pycache__/\n*.pyc\n.venv/\ndist/\nhtmlcov/\n.coverage`
+8. Create stub files:
    - `STEINER_LOG.md` with header only
    - `DOSSIER.md` with placeholder
    - `USAGE.md` with placeholder
-8. Run: `git add -A && git commit -m "steiner: init — [project_name]"`
+9. Run: `git add -A && git commit -m "steiner: init — [project_name]"`
 9. Advance phase to `divergence-analysis` and proceed immediately to Phase 1
 
 ---
@@ -121,11 +126,11 @@ Spawn a general-purpose agent with this prompt:
 >
 > Be specific. Use concrete examples. The acceptance criteria must be checkboxes that a machine could verify.
 >
-> Output the complete document content.
+> Write the complete document to `documents/steiner-spec.md`. Create the `documents/` directory first if it does not exist. Do NOT choose a custom filename — the path must be exactly `documents/steiner-spec.md`.
 
 After Okabe returns:
-1. Create `documents/` directory
-2. Write Okabe's output to `documents/steiner-spec.md`
+1. Verify the file exists at `documents/steiner-spec.md` — if Okabe wrote it elsewhere, move it: `mv documents/*.md documents/steiner-spec.md`
+2. Review it — fill gaps by reasoning from the original prompt
 3. Review it — fill gaps by reasoning from the original prompt
 4. Update `DOSSIER.md`:
    ```
@@ -197,7 +202,7 @@ This phase runs for many sessions. Each session handles one feature or bug-fix c
 1. Read `reading-steiner.md` → identify `current_focus`
 2. If `current_focus` is empty → read `documents/steiner-spec.md` acceptance criteria, pick the first unchecked item
 3. **Spawn Moeka** to explore existing code before writing new code:
-   > You are Moeka Kiryu. Silently and thoroughly explore the codebase. Find: existing utilities relevant to [FEATURE], current test patterns, how similar features are implemented, any abstractions to reuse. Return: list of relevant files with brief description of what each contains.
+   > You are Moeka Kiryu. Silently and thoroughly explore the codebase. Find: existing utilities relevant to [FEATURE], current test patterns, how similar features are implemented, any abstractions to reuse. Also flag any exported symbols that appear to have no importers (dead code). Return: list of relevant files with brief description of what each contains, plus any dead code found.
 4. **Spawn Daru** to implement the feature:
    > You are Daru, Super Hacker of the Future Gadget Lab. Implement [FEATURE] following the spec at `documents/steiner-spec.md`.
    >
@@ -209,6 +214,8 @@ This phase runs for many sessions. Each session handles one feature or bug-fix c
    > - Moeka's codebase report: [paste report]
    >
    > Use Context7 for any library APIs you're not certain about. Write failing tests first, then implement until green. Run the full test suite when done and report the pass/fail summary and coverage %. Update `USAGE.md` with the feature's usage instructions.
+   >
+   > **Argument validation rule**: Every command function must validate its arguments at the command layer before calling lib functions. If a required argument is missing or empty, print a usage message (`Usage: <tool> <command> <required-args>`) to stderr and exit with code 1. Do not rely on lib-level error messages for user-facing argument validation.
 5. Use **Context7** for any library Daru is about to call — fetch live docs to avoid SERN (outdated API hallucinations). If the `context7` tool is not in your tool list, proceed without it.
 6. After Daru returns: verify tests pass by running `[test_cmd]`
 7. Run full test suite: `[test_cmd]`
@@ -402,7 +409,7 @@ After Okabe returns:
 3. Set `current_focus` to first new criterion
 4. Update `DOSSIER.md` with expansion plan
 5. `git add -A && git commit -m "steiner: expansion-[N]-planned — [brief summary]"`
-6. Advance state → `worldline-selection` (re-enters Phase 2 for new features)
+6. **Architecture check**: If the new features fit the existing structure (same stack, same directory layout, just new files), set `phase: time-leap-development` and skip Phase 2 — the worldline is already selected. Only re-enter Phase 2 (`worldline-selection`) if the expansion requires a meaningfully different architecture (e.g., adding a web UI to a CLI, adding a database to a flat-file app).
 
 **Edge case**: If Okabe returns only `EL_PSY_KONGROO` (no ideas), the project is complete. Write `phase: el-psy-kongroo` to `reading-steiner.md`, commit `steiner: el-psy-kongroo`, and end the session. The stop hook will detect the phase and allow exit cleanly.
 
