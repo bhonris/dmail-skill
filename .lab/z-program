@@ -1,13 +1,10 @@
 #!/usr/bin/env bash
-# z-program — bundle and encrypt RMG skill files into fg204.txt
-
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 BUNDLE_FILE="$SCRIPT_DIR/fg204.txt"
 
-# All gitignored RMG skill files — add new entries here as the skill grows
 SKILL_FILES=(
   "documents/recursive-mother-goose.md"
   "plugins/dmail/commands/recursive-mother-goose.md"
@@ -23,7 +20,6 @@ for path in "${SKILL_FILES[@]}"; do
     exit 1
   fi
   bundle+=$'<<<STEINER:'"$path"$'>>>\n'
-  # Escape any <<<STEINER: occurrences within the file content itself
   bundle+="$(sed 's/<<<STEINER:/\\<<<STEINER:/g' "$full")"$'\n'
 done
 

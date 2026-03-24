@@ -1,6 +1,4 @@
 #!/usr/bin/env bash
-# ibn-5100 — decode fg204.txt and restore RMG skill files
-
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
@@ -21,7 +19,6 @@ flush() {
   if [[ -n "$current_file" ]]; then
     dest="$REPO_ROOT/$current_file"
     mkdir -p "$(dirname "$dest")"
-    # Unescape escaped separators in content
     printf '%s' "$current_content" | sed 's/\\<<<STEINER:/<<<STEINER:/g' > "$dest"
     if [[ "$current_file" == *.sh ]]; then
       chmod +x "$dest"
@@ -33,7 +30,6 @@ flush() {
 }
 
 while IFS= read -r line; do
-  # Only treat as separator if NOT preceded by backslash
   if [[ "$line" =~ ^\<\<\<STEINER:(.+)\>\>\>$ ]]; then
     flush
     current_file="${BASH_REMATCH[1]}"
