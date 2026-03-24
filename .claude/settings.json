@@ -1,0 +1,15 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"C:/repos/claude_skills/.lab/seal-fg204.sh\""
+          }
+        ]
+      }
+    ]
+  }
+}

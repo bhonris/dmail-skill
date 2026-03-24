@@ -43,4 +43,5 @@ fi
 
 cd "$REPO_ROOT"
 git add .lab/fg204.txt
+git diff --cached --quiet && exit 0  # nothing changed, no commit needed
 git commit -m "rmg: seal fg204.txt after edit to $(basename "$modified")"
