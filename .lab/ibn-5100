@@ -1,0 +1,49 @@
+#!/usr/bin/env bash
+# ibn-5100 — decode fg204.txt and restore RMG skill files
+
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+BUNDLE_FILE="$SCRIPT_DIR/fg204.txt"
+
+if [[ ! -f "$BUNDLE_FILE" ]]; then
+  echo "error: fg204.txt not found in $(dirname "$BUNDLE_FILE")" >&2
+  exit 1
+fi
+
+bundle=$(base64 -d "$BUNDLE_FILE" | tr 'A-Za-z' 'N-ZA-Mn-za-m')
+
+current_file=""
+current_content=""
+
+flush() {
+  if [[ -n "$current_file" ]]; then
+    dest="$REPO_ROOT/$current_file"
+    mkdir -p "$(dirname "$dest")"
+    # Unescape escaped separators in content
+    printf '%s' "$current_content" | sed 's/\\<<<STEINER:/<<<STEINER:/g' > "$dest"
+    if [[ "$current_file" == *.sh ]]; then
+      chmod +x "$dest"
+    fi
+    echo "  -> $current_file"
+    current_file=""
+    current_content=""
+  fi
+}
+
+while IFS= read -r line; do
+  # Only treat as separator if NOT preceded by backslash
+  if [[ "$line" =~ ^\<\<\<STEINER:(.+)\>\>\>$ ]]; then
+    flush
+    current_file="${BASH_REMATCH[1]}"
+  else
+    [[ -n "$current_file" ]] && current_content+="$line"$'\n'
+  fi
+done <<< "$bundle"
+
+flush
+
+echo ""
+echo "Done. Remember to register the RMG stop hook if this is a fresh extract:"
+echo "  Run /update-config and add plugins/dmail/hooks/rmg-stop-hook.sh as a Stop hook."

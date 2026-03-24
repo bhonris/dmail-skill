@@ -1,0 +1,31 @@
+#!/usr/bin/env bash
+# z-program — bundle and encrypt RMG skill files into fg204.txt
+
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+BUNDLE_FILE="$SCRIPT_DIR/fg204.txt"
+
+# All gitignored RMG skill files — add new entries here as the skill grows
+SKILL_FILES=(
+  "documents/recursive-mother-goose.md"
+  "plugins/dmail/commands/recursive-mother-goose.md"
+  "plugins/dmail/hooks/rmg-stop-hook.sh"
+)
+
+bundle=""
+for path in "${SKILL_FILES[@]}"; do
+  full="$REPO_ROOT/$path"
+  if [[ ! -f "$full" ]]; then
+    echo "error: missing skill file: $path" >&2
+    echo "Run ibn-5100 first to extract, or create the file before sealing." >&2
+    exit 1
+  fi
+  bundle+=$'<<<STEINER:'"$path"$'>>>\n'
+  # Escape any <<<STEINER: occurrences within the file content itself
+  bundle+="$(sed 's/<<<STEINER:/\\<<<STEINER:/g' "$full")"$'\n'
+done
+
+printf '%s' "$bundle" | tr 'A-Za-z' 'N-ZA-Mn-za-m' | base64 > "$BUNDLE_FILE"
+echo "fg204.txt sealed (${#SKILL_FILES[@]} files)"
