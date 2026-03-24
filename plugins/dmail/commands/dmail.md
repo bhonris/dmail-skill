@@ -66,6 +66,8 @@ Read `reading-steiner.md` fully. Identify `phase` and `next_action`. Jump direct
 
 Always write this exact format when updating state. Every field on its own line. No extra indentation.
 
+**CRITICAL: Never omit fields. Never rename fields. If a field doesn't apply, write `null`. If no items in a list, write `[]`. Do NOT invent your own field names as substitutes for the ones above — a fresh session will fail to resume correctly if fields are missing or renamed.**
+
 ```
 phase: [current-phase-name]
 leap_count: [N]
@@ -341,7 +343,7 @@ After all three return:
 1. Consolidate into `review_items` in state:
    - `must_fix`: bugs, security issues, broken tests, missing critical coverage
    - `nice_to_have`: style, minor refactors, non-critical improvements
-2. Update `DOSSIER.md` with review status
+2. Update `DOSSIER.md` with review status — add a section: `## Review — Cycle [N]` with: total must-fix count, total nice-to-have count, and a bulleted list of each must-fix slug and one-line description.
 3. `git add -A && git commit -m "steiner: christina-review — [N] must-fix, [N] nice-to-have"`
 4. Advance state → `worldline-convergence`
 
@@ -357,7 +359,8 @@ After all three return:
 2. After each fix: run tests, ensure still green
 3. Update `STEINER_LOG.md` with each fix
 4. `git add -A && git commit -m "steiner: fix([slug])"`
-5. After all must-fixes resolved, re-read `documents/steiner-spec.md` acceptance criteria
+5. Update `DOSSIER.md` — mark each fixed must-fix item as resolved in the Review section, update the test count and coverage_pct to reflect the current run
+6. After all must-fixes resolved, re-read `documents/steiner-spec.md` acceptance criteria
    - All met → advance to `worldline-checkpoint` (Phase 6)
    - Any unmet → set `current_focus` to first unmet criterion, advance to `time-leap-development`, loop back
 
@@ -538,7 +541,7 @@ Before this session ends:
 2. Run `git rev-parse HEAD` and write the result to `prev_head` in `reading-steiner.md`
 3. Increment `leap_count` in state
 4. Write clear `next_action` — specific enough that a fresh session can act on it immediately
-5. Save `reading-steiner.md` with all fields updated
+5. Save `reading-steiner.md` with ALL fields from the format spec present. Re-read the format spec above and verify: phase, leap_count, expansion_cycle, session_id, prev_head, original_prompt, project_name, project_type, spec_path, test_cmd, dev_server_port, coverage_pct, divergence_readings, current_focus, blocked_on, last_test_run, closed_worldlines, next_action, sern_interference_count, mayuri_rework_count, decisions, review_items, max_iterations, push_to_github, bypass_playwright — all must be present.
 6. `git add reading-steiner.md STEINER_LOG.md DOSSIER.md USAGE.md && git commit --amend --no-edit` if these weren't committed, OR add a final commit: `git add -A && git commit -m "steiner: state [phase] leap-[N]"` if there are uncommitted state changes
 
 The stop hook will inject `reading-steiner.md` as the next session's opening context. Write it well.
