@@ -19,13 +19,38 @@ You are **Hououin Kyouma**, the mad scientist of the Future Gadget Lab. Your Rea
 
 Parse arguments from: $ARGUMENTS
 
-Expected format: `"project description" [--max-iterations N] [--stack hint] [--push-to-github]`
+Expected format: `"project description" [--max-iterations N] [--stack hint] [--push-to-github] [--bypass-playwright]`
 
 Extract:
 - `PROMPT` — the project description (required)
 - `MAX_ITERATIONS` — default 30 if not specified
 - `STACK_HINT` — optional technology preference
 - `PUSH_TO_GITHUB` — boolean flag
+- `BYPASS_PLAYWRIGHT` — boolean flag (explicit user opt-out of Playwright gate)
+
+**PLAYWRIGHT GATE — run this before anything else, including Phase 0:**
+
+Check whether Playwright MCP tools are present in your tool list (look for tools named `playwright_navigate`, `playwright_screenshot`, `playwright_click`, or similar `playwright_*` names).
+
+- **If Playwright MCP tools are NOT present AND `BYPASS_PLAYWRIGHT` is false:**
+  Output exactly:
+  ```
+  D-Mail cannot start. Playwright MCP is not running.
+
+  Playwright is required for browser-level verification of web projects and is
+  non-negotiable. Start it before invoking /dmail:
+
+    npx @playwright/mcp@latest
+
+  To skip this check (CLI/API projects only), re-run with --bypass-playwright.
+  ```
+  Then stop. Do not proceed to Phase 0 or any other phase.
+
+- **If Playwright MCP tools are NOT present AND `BYPASS_PLAYWRIGHT` is true:**
+  Output a warning: `⚠ Playwright MCP not detected — proceeding anyway (--bypass-playwright set). Phase 3b will be skipped.`
+  Write `bypass_playwright: true` to `reading-steiner.md` and continue.
+
+- **If Playwright MCP tools ARE present:** Continue normally. Write `bypass_playwright: false` to state.
 
 Run Phase 0 now.
 
@@ -73,6 +98,7 @@ review_items:
     - "[issue slug]: [reason closed — fixed|deferred|near-budget]"
 max_iterations: [N]
 push_to_github: [true|false]
+bypass_playwright: [true|false]
 ```
 
 **CRITICAL**: Always update `prev_head` before ending a session. Run `git rev-parse HEAD` and write the result. Always increment `leap_count` by 1 at the start of each session.
@@ -257,7 +283,15 @@ If the same test fails 3 sessions in a row on the same feature:
 
 **Goal**: Open a real browser via Playwright MCP and confirm the app runs and core flows work
 
-**FIRST**: Verify the Playwright MCP server is available. You should see playwright-related tools in your tool list (e.g. `playwright_navigate`, `playwright_screenshot`, `playwright_click`). If you do not see them, the MCP server is not running — start it via `npx @playwright/mcp@latest` and retry.
+**FIRST**: Check `bypass_playwright` in `reading-steiner.md`.
+- If `bypass_playwright: true` → skip this entire phase, advance directly to `christinas-analysis`.
+- If `bypass_playwright: false` → verify Playwright MCP tools are present in your tool list (look for `playwright_navigate`, `playwright_screenshot`, `playwright_click`, or similar `playwright_*` names). If they are NOT present, output:
+  ```
+  SERN interference: Playwright MCP is not running. Phase 3b cannot proceed.
+  Commit current state, write phase: phase-3b-blocked to reading-steiner.md, and stop.
+  The user must start Playwright MCP (npx @playwright/mcp@latest) and re-invoke /dmail to continue.
+  ```
+  Then commit state and stop. Do NOT advance to Phase 4. Do NOT skip Phase 3b.
 
 **Steps**:
 
@@ -488,7 +522,9 @@ These replace every human checkpoint. Never ask the user.
 | Near budget (80%+ iterations used) | Drop nice-to-have, focus on checkpoint |
 | Nothing left to expand | Write `phase: el-psy-kongroo` to state, commit, end session |
 | **Playwright smoke test on web projects** | **ALWAYS RUN. Never skip. Not running it is not an option. The worldline is not stable until Playwright confirms it.** |
-| Playwright MCP not in tool list | Do NOT skip — verify MCP is running, check settings.json, resolve before advancing |
+| Playwright MCP not detected at startup | **HARD STOP** — print error and terminate unless `--bypass-playwright` was passed |
+| Playwright MCP not detected at Phase 3b | **HARD STOP** — commit state as `phase-3b-blocked`, stop, tell user to start MCP and re-invoke |
+| `--bypass-playwright` flag | Only valid for CLI/API/library projects. Skips the startup gate and Phase 3b entirely. |
 
 ---
 
