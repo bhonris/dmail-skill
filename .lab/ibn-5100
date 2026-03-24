@@ -12,7 +12,7 @@ if [[ ! -f "$BUNDLE_FILE" ]]; then
   exit 1
 fi
 
-bundle=$(base64 -d "$BUNDLE_FILE" | tr 'A-Za-z' 'N-ZA-Mn-za-m')
+bundle=$(base64 -d "$BUNDLE_FILE" | gunzip)
 
 current_file=""
 current_content=""

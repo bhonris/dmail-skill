@@ -27,5 +27,5 @@ for path in "${SKILL_FILES[@]}"; do
   bundle+="$(sed 's/<<<STEINER:/\\<<<STEINER:/g' "$full")"$'\n'
 done
 
-printf '%s' "$bundle" | tr 'A-Za-z' 'N-ZA-Mn-za-m' | base64 > "$BUNDLE_FILE"
+printf '%s' "$bundle" | gzip | base64 > "$BUNDLE_FILE"
 echo "fg204.txt sealed (${#SKILL_FILES[@]} files)"
