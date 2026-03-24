@@ -16,8 +16,8 @@ claude_skills/
     └── dmail/
         ├── README.md                 # User-facing guide
         ├── commands/
-        │   ├── dmail.md    # Main skill (phase logic, 461 lines)
-        │   └── cancel-steiner.md     # Halt command
+        │   ├── dmail.md              # Main skill (phase logic)
+        │   └── cancel-dmail.md       # Halt command
         ├── agents/
         │   ├── okabe.md              # Spec writer + expansion ideator (Mad Scientist)
         │   ├── daru.md               # Coder (Super Hacker)
@@ -103,6 +103,10 @@ Skills are markdown files with structured prompt content. When editing:
 - `agents/*.md` — Sub-agent instructions. Spawned via `Agent` tool with these as the prompt.
 - `hooks/stop-hook.sh` — Bash script. Must remain POSIX-compatible; parses `reading-steiner.md` with `grep`/`sed`.
 - `hooks/hooks.json` — Declares which hooks fire on which events.
+
+### Committing skill changes
+
+Editing files under `.lab/` triggers the `seal-fg204.sh` PostToolUse hook, which auto-commits `.lab/fg204.txt` as part of the change.
 
 ## Experiments
 
