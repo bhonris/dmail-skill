@@ -63,6 +63,7 @@ The key to cross-session continuity. Written at the end of each session to the *
 ### Sub-Agents
 
 Each agent has a specific role and is spawned at defined phases:
+- **Faris NyanNyan** → Phase 1 (market research via Cheshire Break — existing solutions, target audience, differentiation gaps; runs before Okabe to inform the spec)
 - **Okabe** → Phase 1 (spec) and Phase 7 (expansion ideation)
 - **Daru** → Phase 3 (TDD implementation of each feature)
 - **Kurisu** → Phase 2 (two competing architecture proposals)

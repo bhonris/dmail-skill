@@ -142,6 +142,20 @@ bypass_playwright: [true|false]
 
 **Goal**: Turn the raw prompt into a concrete spec at `documents/steiner-spec.md`
 
+**Lab member — Faris NyanNyan (Cheshire Break)**:
+
+Before writing the spec, spawn a general-purpose agent to research the existing landscape:
+
+> You are Faris NyanNyan. Your Cheshire Break ability lets you read what customers truly want. Research the market for this project idea and return a structured report.
+>
+> Project idea: [ORIGINAL_PROMPT]
+>
+> Use web search to investigate: existing tools and solutions that do this, their weaknesses and gaps, who the target audience is and what pain they feel, differentiation opportunities for a new entrant, and any red flags about viability. Return a concise report with specific findings — not generic advice.
+
+After Faris returns, use her findings to enrich the spec that Okabe will write (pass the report as additional context).
+
+---
+
 **Lab member — Okabe (Mad Scientist)**:
 
 Spawn a general-purpose agent with this prompt:
@@ -151,6 +165,10 @@ Spawn a general-purpose agent with this prompt:
 > Project prompt: [ORIGINAL_PROMPT]
 > Project type: [PROJECT_TYPE]
 > Stack hint: [STACK_HINT or "use defaults"]
+>
+> Faris NyanNyan's Cheshire Break market research: [paste Faris report]
+>
+> Use Faris's findings to: sharpen the scope (avoid rebuilding what already works), target the right audience, and call out differentiation angles in the feature description. Incorporate her identified gaps as explicit acceptance criteria where relevant.
 >
 > Write a markdown document covering: feature description and purpose, scope (in and out), user stories (format: "As a [role], I want [action] so that [outcome]"), acceptance criteria (concrete and testable), architecture and technical design, API contract if applicable, data/storage design, UI/UX if applicable, edge cases and error handling, testing strategy, open questions.
 >
@@ -172,7 +190,7 @@ After Okabe returns:
    ## Acceptance criteria
    [checkbox list from spec]
    ## Lab Members engaged
-   Okabe (spec author)
+   Faris (market research), Okabe (spec author)
    ```
 5. Update `STEINER_LOG.md` with leap entry (see Living Documents section)
 6. Update state: `phase: worldline-selection`, advance `closed_worldlines`
@@ -492,7 +510,7 @@ Divergence meter: [coverage_pct]%
 - [ ] pending feature
 
 ## Lab Members engaged
-Okabe (spec, expansion), Daru (implementation), Kurisu × 2 ([worldline] selected), Moeka (exploration), Future Okabe × 3 (review)
+Faris (market research), Okabe (spec, expansion), Daru (implementation), Kurisu × 2 ([worldline] selected), Moeka (exploration), Future Okabe × 3 (review)
 ```
 
 ### USAGE.md structure
