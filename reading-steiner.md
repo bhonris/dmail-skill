@@ -1,7 +1,7 @@
-phase: rmg-patch-proposal
+phase: rmg-probe-selection
 session_id: 2026-03-26T00:00:00Z
-prev_head: ecde6e0fcbeda668fc1258eeec297fe5b8462cea
-experiment_id: 2
+prev_head: 30f8d4adbcfea466948d5e3d9e4e9defaa9d0e15
+experiment_id: 3
 max_iterations: 10
 probe_type: web-game
 probe_prompt: "a browser-based RPG battle game with animated characters and combat cutscenes, similar to Pokemon or early Final Fantasy battles"
@@ -40,4 +40,4 @@ patches_proposed:
     new_text: "**CRITICAL: Never omit fields. Never rename fields. If a field doesn't apply, write `null`. If no items in a list, write `[]`. Do NOT invent your own field names as substitutes for the ones above — a fresh session will fail to resume correctly if fields are missing or renamed.**\n\n**CRITICAL: Do NOT use `#` comments or free-form text sections inside `reading-steiner.md` as a substitute for required fields. Comments (e.g. `# ── Expansion Cycle 5 ──`) may be appended AFTER all required fields are written, but the required fields must all appear first in the correct format. A field buried after a comment block will be skipped by the stop hook parser. Write all 25 required fields first, then any supplemental notes after.**"
 patches_approved: []
 probe_selection_note: "Deviated from LRU order (API/Library) to target new visual quality gates added this session: Faris visual benchmarking, Okabe visual design spec, Kurisu rendering pipeline decision, Phase 3b visual quality check, Reviewer 4. Reference titles in prompt intentionally trigger all new code paths."
-next_action: "present patches to user for approval"
+next_action: "select next probe — API or Library (neither has been run; web-game was run as exp 2)"
