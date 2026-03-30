@@ -143,7 +143,10 @@ bypass_playwright: [true|false]
    - Prioritize: critical path first, then high-value, then the rest
    - Group features by domain/module for logical porting order
    - **Granularity rule**: Every distinct user action (submit form, open dialog, capture signature, download PDF) is a separate feature. If a source "feature" has more than 3 source files, decompose it into sub-features. Target ratio: ~1 feature per 2-3 source files. A 74-file project should produce 25-40 features, not 10.
-3. **Count source tests**: Run the source test suite or count test files/cases. Record as `source_test_count` in state.
+3. **Measure source test count**:
+   - **Preferred**: Run the source test suite (e.g. `pnpm test`, `pytest`, `npm test`) and read the reported test count from output. This is the ground truth.
+   - **Fallback (if suite fails to run)**: Count test cases by grepping for test function declarations (`it(`, `test(`, `def test_`). Document the method: `source_test_count: [N] (via grep — suite failed to run)`.
+   - Do not estimate — an inaccurate count makes `test_parity_pct` unreliable in Phase 7.
 4. **Update state**: `phase: source-recon`, update `total_features`, `source_test_count`
 5. **Commit**: `shift: source reconnaissance — [N] features inventoried, [M] source tests counted`
 6. → **Phase 2**
@@ -292,7 +295,10 @@ When criteria met → **Phase 4b** (web targets) or **Phase 5** (non-web targets
    - **Reviewer 1 — Parity & Completeness** (Mode 1): Read source AND target side-by-side for every ported feature. Flag behavioral divergences, missing sub-features, TODO stubs, hardcoded strings in localized apps.
    - **Reviewer 2 — Correctness & Security** (Mode 2): Logic errors, security issues, error handling gaps.
    - **Reviewer 3 — Test Parity & Coverage** (Mode 3): Compare source test count vs target test count per feature. Flag parity tests that could pass even with wrong behavior. Flag render-only tests as insufficient.
-2. **Consolidate findings** into `review_items` (must-fix / nice-to-have).
+2. **Write findings to `worldline-shift.md`** — update `review_items` in state:
+   - `must_fix`: parity gaps, behavioral divergences, missing sub-features, TODO stubs, logic errors, security issues, test parity failures. Each slug **must include a file reference**: `slug (file.py:line-range)`. If a reviewer found nothing, write `[reviewer-N-clean]: no issues found` — never leave a section as a bare empty list when reviewers have run.
+   - `nice_to_have`: style, minor improvements, test refactors that don't affect parity
+   - Write the state update **before** the commit — the commit must capture the findings.
 3. **Commit**: `shift: divergence audit — [N] must-fix, [M] nice-to-have`
 4. → **Phase 6**
 
