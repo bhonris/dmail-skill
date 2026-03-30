@@ -105,6 +105,8 @@ review_items:
 max_iterations: [N]
 push_to_github: [true|false]
 bypass_playwright: [true|false]
+sern_no_progress_streak: [0-N, increments each leap with no commit, resets to 0 on commit]
+lessons_learned: []    # e.g. ["cycle 1: avoided X because Y", "cycle 2: Z worked well"]
 ```
 
 **CRITICAL**: Always update `prev_head` before ending a session. Run `git rev-parse HEAD` and write the result. Always increment `leap_count` by 1 at the start of each session.
@@ -195,8 +197,14 @@ Spawn a general-purpose agent with this prompt:
 
 After Okabe returns:
 1. Verify the file exists at `documents/steiner-spec.md` — if Okabe wrote it elsewhere, move it: `mv documents/*.md documents/steiner-spec.md`
-2. Review it — fill gaps by reasoning from the original prompt
-3. Review it — fill gaps by reasoning from the original prompt
+2. **Spec Quality Gate** — read `documents/steiner-spec.md` and verify all of the following:
+   - At least 3 acceptance criteria exist AND each starts with `- [ ]` (machine-checkable checkbox)
+   - Architecture section exists and names at least one specific technology
+   - No acceptance criterion uses vague language ("works correctly", "looks nice", "is good") — each must describe a specific observable behavior or measurable outcome
+   - **Game/visual projects only**: `## Visual Design Specification` section exists with a rendering pipeline explicitly chosen (not "TBD" or "SVG or Canvas 2D")
+
+   **If any check fails**: Re-spawn Okabe with targeted feedback — tell it exactly which checks failed and what concrete improvements are needed. Max 1 retry. If retry also fails, log the gaps as open questions in the spec and continue.
+3. Review the spec — fill any remaining gaps by reasoning from the original prompt
 4. Update `DOSSIER.md`:
    ```
    # [project_name] — Future Gadget Dossier
@@ -455,6 +463,13 @@ The lab does not stop when criteria are met. It checkpoints and expands.
 6. Update `documents/steiner-spec.md` Open Questions with all assumptions made this cycle
 7. Add checkpoint entry to `STEINER_LOG.md`: `## Worldline [N] Stabilised`
 
+**Cycle Reflection** (write before spawning Mayuri):
+
+Append one new entry to `lessons_learned` in `reading-steiner.md` (do not overwrite existing entries — add to the list):
+- Format: `"cycle [N]: [primary SERN cause or 'none']; [anti-pattern to avoid next cycle]; [1 thing that worked well]"`
+- Example: `"cycle 2: async race condition caused 3 stuck leaps; avoid shared mutable state in test helpers; TDD from spec checkboxes kept scope tight"`
+Keep each entry to one line. Existing entries carry forward to inform Phase 7.
+
 **Lab member — Mayuri (User Reviewer)**:
 
 Spawn a general-purpose agent:
@@ -495,10 +510,16 @@ Spawn a general-purpose agent with full project context:
 > - Known blockers (SERN interference): sern_interference_count=[N], blocked_on=[blocked_on]
 > - Divergence readings (fragile UI flows): [paste divergence_readings]
 > - Completed worldlines this cycle: [paste closed_worldlines]
+> - Lessons learned from prior cycles: [paste lessons_learned list]
+> - Budget: leap_count=[leap_count] / max_iterations=[max_iterations]
 >
 > Consider: implied features not yet built, natural extensions of what exists, quality improvements (performance, error handling, DX, accessibility), deferred review items, test coverage gaps.
 >
-> Return: a ranked list of 5-8 improvement ideas, each with: title, one-sentence description, estimated complexity (small/medium/large), value to user.
+> **Budget awareness**: If leap_count >= (max_iterations * 0.9), return only `EL_PSY_KONGROO` — a graceful stop is better than a half-built feature. If leap_count >= (max_iterations * 0.8) and no critical must-fix items remain, return `EL_PSY_KONGROO`.
+>
+> **Lessons awareness**: Do not propose features that require the same approaches that caused SERN interference in prior cycles (listed in lessons_learned) unless the root cause has been explicitly resolved.
+>
+> Return: a ranked list of 5-8 improvement ideas, each with: title, one-sentence description, estimated complexity (small/medium/large), value to user. Or return only `EL_PSY_KONGROO` if the project is complete or budget is near exhausted.
 
 After Okabe returns:
 1. Select top 2–4 items that offer best value / complexity ratio (prefer 2-3 small over 1 large)
@@ -604,8 +625,9 @@ Before this session ends:
 1. Ensure all changes are committed (nothing uncommitted)
 2. Run `git rev-parse HEAD` and write the result to `prev_head` in `reading-steiner.md`
 3. Increment `leap_count` in state
-4. Write clear `next_action` — specific enough that a fresh session can act on it immediately
-5. Save `reading-steiner.md` with ALL fields from the format spec present. Re-read the format spec above and verify: phase, leap_count, expansion_cycle, session_id, prev_head, original_prompt, project_name, project_type, spec_path, test_cmd, dev_server_port, coverage_pct, divergence_readings, current_focus, blocked_on, last_test_run, closed_worldlines, next_action, sern_interference_count, mayuri_rework_count, decisions, review_items, max_iterations, push_to_github, bypass_playwright — all must be present.
-6. `git add reading-steiner.md STEINER_LOG.md DOSSIER.md USAGE.md && git commit --amend --no-edit` if these weren't committed, OR add a final commit: `git add -A && git commit -m "steiner: state [phase] leap-[N]"` if there are uncommitted state changes
+4. Write clear `next_action` and `current_focus` — specific enough that a fresh session can act immediately without reading the full state
+5. **Update `sern_no_progress_streak`**: check `git log --oneline -1` — if you made at least one `steiner:` commit this session, set `sern_no_progress_streak: 0`; otherwise increment it by 1.
+6. Save `reading-steiner.md` with ALL fields from the format spec present. Re-read the format spec above and verify: phase, leap_count, expansion_cycle, session_id, prev_head, original_prompt, project_name, project_type, spec_path, test_cmd, dev_server_port, coverage_pct, divergence_readings, current_focus, blocked_on, last_test_run, closed_worldlines, next_action, sern_interference_count, mayuri_rework_count, decisions, review_items, max_iterations, push_to_github, bypass_playwright, sern_no_progress_streak, lessons_learned — all must be present.
+7. `git add reading-steiner.md STEINER_LOG.md DOSSIER.md USAGE.md && git commit --amend --no-edit` if these weren't committed, OR add a final commit: `git add -A && git commit -m "steiner: state [phase] leap-[N]"` if there are uncommitted state changes
 
-The stop hook will inject `reading-steiner.md` as the next session's opening context. Write it well.
+The stop hook generates a focused brief from `current_focus`, `next_action`, and key state fields — not the full file. Write those fields well.
