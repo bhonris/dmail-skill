@@ -9,6 +9,7 @@ SKILL_FILES=(
   "documents/recursive-mother-goose.md"
   "plugins/dmail/commands/recursive-mother-goose.md"
   "plugins/dmail/hooks/rmg-stop-hook.sh"
+  "plugins/dmail/agents/rmg-scorer.md"
 )
 
 bundle=""
