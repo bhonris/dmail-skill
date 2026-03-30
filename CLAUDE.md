@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What This Repository Is
 
-This is a **Claude Code skills/plugins repository** — a collection of custom slash commands, agents, and hooks that extend Claude Code's capabilities. The flagship skill is **D-Mail**, an autonomous project builder that runs indefinitely from a single prompt.
+This is a **Claude Code skills/plugins repository** — a collection of custom slash commands, agents, and hooks that extend Claude Code's capabilities. The flagship skill is **D-Mail**, an autonomous project builder that runs indefinitely from a single prompt. The second skill is **Port** (Worldline Shift), an autonomous project porting tool that migrates codebases across tech stacks with 1:1 feature parity.
 
 ## Repository Structure
 
@@ -13,17 +13,27 @@ claude_skills/
 ├── documents/                        # Design specs and feature docs
 │   └── autonomous-builder-skill.md   # Full design spec for D-Mail
 └── plugins/
-    └── dmail/
-        ├── README.md                 # User-facing guide
+    ├── dmail/
+    │   ├── README.md                 # User-facing guide
+    │   ├── commands/
+    │   │   ├── dmail.md              # Main skill (phase logic)
+    │   │   └── cancel-dmail.md       # Halt command
+    │   ├── agents/
+    │   │   ├── okabe.md              # Spec writer + expansion ideator (Mad Scientist)
+    │   │   ├── daru.md               # Coder (Super Hacker)
+    │   │   ├── kurisu.md             # Architecture proposer (dual-worldline)
+    │   │   ├── moeka.md              # Codebase explorer (reads before building)
+    │   │   └── future-okabe.md       # Parallel code reviewers (3 dimensions)
+    │   └── hooks/
+    │       ├── hooks.json            # Hook registration manifest
+    │       └── stop-hook.sh          # Session-to-session loop controller
+    └── port/
         ├── commands/
-        │   ├── dmail.md              # Main skill (phase logic)
-        │   └── cancel-dmail.md       # Halt command
+        │   ├── worldline-shift.md    # Main skill (porting phase logic)
+        │   └── cancel-worldline-shift.md  # Halt command
         ├── agents/
-        │   ├── okabe.md              # Spec writer + expansion ideator (Mad Scientist)
-        │   ├── daru.md               # Coder (Super Hacker)
-        │   ├── kurisu.md             # Architecture proposer (dual-worldline)
-        │   ├── moeka.md              # Codebase explorer (reads before building)
-        │   └── future-okabe.md       # Parallel code reviewers (3 dimensions)
+        │   ├── suzuha.md             # Source analyzer + parity mapper + verifier
+        │   └── luka.md               # Data model & API contract mapper
         └── hooks/
             ├── hooks.json            # Hook registration manifest
             └── stop-hook.sh          # Session-to-session loop controller
@@ -97,6 +107,59 @@ Each agent has a specific role and is spawned at defined phases:
 - **Context7 MCP**: Live library docs to prevent hallucinated API usage
 - **GitHub MCP**: Optional, used with `--push-to-github` flag
 
+## Port (Worldline Shift): How It Works
+
+### The Core Concept
+
+Port takes a **source project** in one tech stack and autonomously migrates it to a **target project** in another stack, maintaining 1:1 functional parity. The source project IS the spec — no guessing, no feature invention.
+
+### The Porting Phases
+
+| Phase | Name | Purpose |
+|-------|------|---------|
+| 0 | Initialization | Setup target dir, validate source, detect stacks |
+| 1 | Source Reconnaissance | Moeka + Suzuha exhaustively analyze source, extract feature inventory |
+| 2 | Attractor Field Mapping | Suzuha creates parity matrix; Luka maps all data models & API contracts |
+| 3 | Convergence Architecture | Kurisu proposes Alpha (direct map) + Beta (idiomatic) target architectures |
+| 4 | Worldline Migration | Per-feature TDD porting: Moeka reads → Daru ports with parity tests |
+| 4b | Cross-Worldline Verification | Playwright browser verification for web targets |
+| 5 | Divergence Audit | Future Okabe ×3 review with parity focus |
+| 6 | Convergence Fix | Fix all must-fix review items |
+| 7 | Shift Checkpoint | Final verification; if features remain → Phase 4; else complete |
+
+### Key Differences from D-Mail
+
+- **Source = Spec**: No spec-writing phase — the source project defines all requirements
+- **Parity Matrix**: Master tracking document mapping every source feature to its target equivalent
+- **Data Contract Mapping**: Field-by-field mapping of all models, APIs, state, storage, routes
+- **Parity Tests**: Tests written to verify the target behaves identically to the source
+- **Parity Percentage**: Tracks `ported_features / total_features` rather than just coverage
+
+### Sub-Agents
+
+Reused from D-Mail:
+- **Moeka** → Phases 1, 4 (codebase explorer — reads both source and target)
+- **Daru** → Phase 4 (TDD implementation of each ported feature)
+- **Kurisu** → Phase 3 (target architecture proposals)
+- **Future Okabe** → Phase 5 (3 parallel reviewers with parity focus)
+
+New agents:
+- **Suzuha** → Phases 1, 2, 5 (source analyzer, parity matrix creator, parity verifier — "time traveler who bridges both worldlines")
+- **Luka** → Phase 2 (data model & API contract mapper — "exists in both worldlines")
+
+### State Persistence: `worldline-shift.md`
+
+Same pattern as D-Mail's `reading-steiner.md` but with porting-specific fields: `source_path`, `source_stack`, `target_stack`, `parity_pct`, `total_features`, `ported_features`, and paths to the parity matrix and data contracts.
+
+### Living Documents (in target project)
+
+- `SHIFT_LOG.md` — one entry per leap with parity stats
+- `PARITY_REPORT.md` — running feature-by-feature parity status
+- `documents/feature-inventory.md` — complete source feature catalog
+- `documents/parity-matrix.md` — master 1:1 feature tracking
+- `documents/data-contracts.md` — field-level data model mapping
+- `documents/convergence-spec.md` — architectural decisions
+
 ## Modifying Skills
 
 Skills are markdown files with structured prompt content. When editing:
@@ -129,3 +192,8 @@ All naming is thematic — it's cosmetic, not functional:
 - "SERN interference" = bugs/blockers
 - "Time Leap" = git rollback
 - "El Psy Kongroo" = completion signal
+- "Worldline Shift" = `/worldline-shift` — migrating from one worldline (stack) to another
+- "Attractor Field" = the set of features that must remain constant across worldlines (parity matrix)
+- "Convergence" = making the target match the source's functionality
+- "Suzuha" = the time traveler who has seen both worldlines (source analyzer + parity verifier)
+- "Luka" = the one who exists in both worldlines (data contract mapper)
