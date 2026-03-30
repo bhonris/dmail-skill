@@ -33,7 +33,10 @@ claude_skills/
         │   └── cancel-worldline-shift.md  # Halt command
         ├── agents/
         │   ├── suzuha.md             # Source analyzer + parity mapper + verifier
-        │   └── luka.md               # Data model & API contract mapper
+        │   ├── ruka.md               # Data model & API contract mapper
+        │   ├── daru-port.md          # Parity-driven coder (port-specific)
+        │   ├── kurisu-port.md        # Mapping-focused architect (port-specific)
+        │   └── future-okabe-port.md  # Parity-focused reviewer (port-specific)
         └── hooks/
             ├── hooks.json            # Hook registration manifest
             └── stop-hook.sh          # Session-to-session loop controller
@@ -119,7 +122,7 @@ Port takes a **source project** in one tech stack and autonomously migrates it t
 |-------|------|---------|
 | 0 | Initialization | Setup target dir, validate source, detect stacks |
 | 1 | Source Reconnaissance | Moeka + Suzuha exhaustively analyze source, extract feature inventory |
-| 2 | Attractor Field Mapping | Suzuha creates parity matrix; Luka maps all data models & API contracts |
+| 2 | Attractor Field Mapping | Suzuha creates parity matrix; Ruka maps all data models & API contracts |
 | 3 | Convergence Architecture | Kurisu proposes Alpha (direct map) + Beta (idiomatic) target architectures |
 | 4 | Worldline Migration | Per-feature TDD porting: Moeka reads → Daru ports with parity tests |
 | 4b | Cross-Worldline Verification | Playwright browser verification for web targets |
@@ -137,15 +140,15 @@ Port takes a **source project** in one tech stack and autonomously migrates it t
 
 ### Sub-Agents
 
-Reused from D-Mail:
+Shared with D-Mail:
 - **Moeka** → Phases 1, 4 (codebase explorer — reads both source and target)
-- **Daru** → Phase 4 (TDD implementation of each ported feature)
-- **Kurisu** → Phase 3 (target architecture proposals)
-- **Future Okabe** → Phase 5 (3 parallel reviewers with parity focus)
 
-New agents:
+Port-specific agents:
+- **Daru (Port)** → Phase 4 (parity-driven TDD — translates source features with behavioral test parity)
+- **Kurisu (Port)** → Phase 3 (mapping-focused architecture — source→target module mapping, platform API mapping)
+- **Future Okabe (Port)** → Phase 5 (parity-focused review — source/target side-by-side comparison, test count verification, stub detection)
 - **Suzuha** → Phases 1, 2, 5 (source analyzer, parity matrix creator, parity verifier — "time traveler who bridges both worldlines")
-- **Luka** → Phase 2 (data model & API contract mapper — "exists in both worldlines")
+- **Ruka** → Phase 2 (data model & API contract mapper — "exists in both worldlines")
 
 ### State Persistence: `worldline-shift.md`
 
@@ -196,4 +199,4 @@ All naming is thematic — it's cosmetic, not functional:
 - "Attractor Field" = the set of features that must remain constant across worldlines (parity matrix)
 - "Convergence" = making the target match the source's functionality
 - "Suzuha" = the time traveler who has seen both worldlines (source analyzer + parity verifier)
-- "Luka" = the one who exists in both worldlines (data contract mapper)
+- "Ruka" = the one who exists in both worldlines (data contract mapper)

@@ -47,6 +47,11 @@ coverage_pct: [0-100 or unknown]
 parity_pct: [0-100]
 total_features: [N]
 ported_features: [N]
+verified_features: [N]
+source_test_count: [N]
+target_test_count: [N]
+test_parity_pct: [0-100]
+features_this_leap: [N]
 current_focus: "[what to work on]"
 blocked_on: null
 last_test_run: "[N] pass, [N] fail"
@@ -137,9 +142,11 @@ bypass_playwright: [true|false]
      ```
    - Prioritize: critical path first, then high-value, then the rest
    - Group features by domain/module for logical porting order
-3. **Update state**: `phase: source-recon`, update `total_features`
-4. **Commit**: `shift: source reconnaissance — [N] features inventoried`
-5. → **Phase 2**
+   - **Granularity rule**: Every distinct user action (submit form, open dialog, capture signature, download PDF) is a separate feature. If a source "feature" has more than 3 source files, decompose it into sub-features. Target ratio: ~1 feature per 2-3 source files. A 74-file project should produce 25-40 features, not 10.
+3. **Count source tests**: Run the source test suite or count test files/cases. Record as `source_test_count` in state.
+4. **Update state**: `phase: source-recon`, update `total_features`, `source_test_count`
+5. **Commit**: `shift: source reconnaissance — [N] features inventoried, [M] source tests counted`
+6. → **Phase 2**
 
 ---
 
@@ -157,7 +164,7 @@ bypass_playwright: [true|false]
      ```
    - Parity statuses: `not-started` → `in-progress` → `ported` → `verified`
    - Include totals row with parity percentage
-2. **Spawn Luka** (data contract mapper) with source analysis:
+2. **Spawn Ruka** (data contract mapper) with source analysis:
    - Create `documents/data-contracts.md`:
      - Every data model / schema / type with field-by-field mapping
      - API endpoints with request/response shapes
@@ -181,15 +188,17 @@ bypass_playwright: [true|false]
 
 **Goal**: Design target project architecture that cleanly maps to source features.
 
-1. **Spawn Kurisu** twice — propose two architectures for the target:
+1. **Spawn Kurisu (Port)** (`plugins/port/agents/kurisu-port.md`) twice — propose two architectures for the target:
    - **Alpha Worldline** (Direct Map): Mirror source structure as closely as possible in target stack. Fastest to port, easiest to verify parity.
    - **Beta Worldline** (Idiomatic): Use target stack's idiomatic patterns and conventions. Cleaner long-term, but more translation work.
    - Both must include:
      - Directory structure (tree)
-     - How each source module maps to target modules
-     - Key dependencies and their purpose
+     - Source → target module mapping table
+     - Platform API mapping table (every source dependency → target equivalent)
+     - Key dependencies with versions
      - Testing strategy (framework, patterns, how to verify parity)
-     - Migration order recommendation (which features to port first)
+     - i18n strategy (if source uses localization)
+     - Migration order based on dependency graph
 2. **Select architecture**:
    - Small project (< 15 features) → Alpha (direct map)
    - Large project or significantly different paradigms → Beta (idiomatic)
@@ -214,30 +223,30 @@ For each unported feature from the parity matrix (in priority order):
 
 1. **Spawn Moeka** to read the target project's current state.
 2. **Spawn Moeka** to re-read the source feature's implementation (specific files from inventory).
-3. **Spawn Daru** with:
+3. **Spawn Daru (Port)** (`plugins/port/agents/daru-port.md`) with:
    - The feature spec from the inventory
    - The data contract mapping for relevant models
-   - The source implementation (for reference, NOT to copy blindly)
+   - The source implementation (the spec — Daru must read and understand it)
+   - The source test files for this feature (Daru must match test count)
    - Moeka's target codebase report
-   - Instructions:
-     a. **Write parity tests FIRST** — tests that verify the exact same behavior as the source:
-        - Same inputs → same outputs
-        - Same error cases → same error handling
-        - Same edge cases → same edge behavior
-        - Data model round-trip tests (source format ↔ target format)
-     b. **Implement the feature** to make tests pass
-     c. **Run full test suite** — all tests must pass, not just the new ones
-     d. Update `PARITY_REPORT.md` with feature status
+   - Daru will:
+     a. Read source implementation to understand exact behavior
+     b. Count source tests and write comparable parity tests FIRST
+     c. Implement the feature to make all parity tests pass
+     d. Run full test suite — all tests must pass, not just the new ones
+     e. Update `PARITY_REPORT.md` with feature status and test counts
 4. **Update parity matrix**: Mark feature as `ported`, update `ported_features` count
 5. **Commit**: `shift: port F-[NNN] [feature_name] — [N] tests passing`
 6. **Calculate parity percentage**: `ported_features / total_features * 100`
 
-**Repeat** for next unported feature. Stay in Phase 4 until all critical + high priority features are ported.
+**Repeat** for next unported feature, but respect the **leap limit**:
 
-**Advancement criteria**:
+**Leap limit**: Port at most **3 features per leap**. After 3 features, advance to checkpoint (Phase 7) even if more features remain. Update `features_this_leap` in state. Reset to 0 at the start of each leap. This ensures each feature gets adequate depth and prevents shallow batch porting.
+
+**Advancement criteria** (to leave Phase 4):
 - All critical features ported and tested
 - All high-priority features ported and tested
-- Coverage ≥ 80%
+- `target_test_count / source_test_count ≥ 0.5` (test parity ratio)
 - Full test suite green
 
 When criteria met → **Phase 4b** (web targets) or **Phase 5** (non-web targets).
@@ -258,16 +267,20 @@ When criteria met → **Phase 4b** (web targets) or **Phase 5** (non-web targets
 
 **Goal**: Browser-level parity verification using Playwright MCP.
 
-1. Start target dev server.
-2. For each critical user flow from the feature inventory:
+**IMPORTANT**: This phase is NON-NEGOTIABLE for web/PWA targets. Do NOT silently skip it.
+
+1. **Re-check Playwright availability**: Verify `browser_navigate` and `browser_snapshot` MCP tools are callable RIGHT NOW.
+   - If available → proceed.
+   - If unavailable AND `bypass_playwright: false` → **HARD STOP**. Print the Playwright gate error message from Session Startup. Do NOT proceed to Phase 5. Do NOT mark features as verified. Wait for user to start Playwright MCP.
+   - If unavailable AND `bypass_playwright: true` → Log warning in SHIFT_LOG: `"Phase 4b SKIPPED — bypass_playwright is true. Parity cannot be fully verified. No features will be marked 'verified' — only 'ported'."` Then → Phase 5.
+2. Start target dev server.
+3. For each critical user flow from the feature inventory:
    - Navigate the flow in the target app via Playwright
    - Verify: correct screens render, interactions work, data persists
    - Compare against source behavior (from feature inventory descriptions)
-3. Document any visual or behavioral discrepancies.
-4. If failures found → back to **Phase 4** to fix the specific features.
-5. If all flows pass → **Phase 5**.
-
-Skip this phase if `bypass_playwright: true` (but log warning).
+4. Document any visual or behavioral discrepancies.
+5. If failures found → back to **Phase 4** to fix the specific features.
+6. If all flows pass → **Phase 5**.
 
 ---
 
@@ -275,10 +288,10 @@ Skip this phase if `bypass_playwright: true` (but log warning).
 
 **Goal**: Code review with parity focus.
 
-1. **Spawn Future Okabe ×3** (parallel reviewers):
-   - **Reviewer 1 — Parity & Completeness**: Compare target against source feature-by-feature. Flag any behavioral differences, missing edge cases, untranslated business logic.
-   - **Reviewer 2 — Correctness & Security**: Same as dmail — logic errors, security issues, error handling.
-   - **Reviewer 3 — Test Coverage & Parity Tests**: Are parity tests actually testing the right things? Missing scenarios? Tests that would pass even if behavior diverged?
+1. **Spawn Future Okabe (Port) ×3** (`plugins/port/agents/future-okabe-port.md`) as parallel reviewers:
+   - **Reviewer 1 — Parity & Completeness** (Mode 1): Read source AND target side-by-side for every ported feature. Flag behavioral divergences, missing sub-features, TODO stubs, hardcoded strings in localized apps.
+   - **Reviewer 2 — Correctness & Security** (Mode 2): Logic errors, security issues, error handling gaps.
+   - **Reviewer 3 — Test Parity & Coverage** (Mode 3): Compare source test count vs target test count per feature. Flag parity tests that could pass even with wrong behavior. Flag render-only tests as insufficient.
 2. **Consolidate findings** into `review_items` (must-fix / nice-to-have).
 3. **Commit**: `shift: divergence audit — [N] must-fix, [M] nice-to-have`
 4. → **Phase 6**
@@ -287,16 +300,29 @@ Skip this phase if `bypass_playwright: true` (but log warning).
 
 ## Phase 6 — Convergence Fix
 
-**Goal**: Fix all must-fix review items.
+**Goal**: Fix all must-fix review items, then verify parity.
 
 1. For each `must_fix` item:
    - Fix the issue
    - Add or update parity test to prevent regression
    - Run full test suite
    - Move item to `closed` in review_items
-2. Re-check parity matrix — all features should be `verified` after fixes.
-3. If any feature reverted to broken → back to **Phase 4** for that feature.
-4. When all must-fix items closed → **Phase 7**.
+2. When all must-fix items closed → **Phase 6b**.
+
+---
+
+## Phase 6b — Parity Verification (Mandatory)
+
+**Goal**: Suzuha verifies every "ported" feature actually matches source behavior.
+
+1. **Spawn Suzuha** (Mode 3: Parity Verification) with access to both source and target codebases:
+   - For each feature marked `ported`: read source, read target, read parity tests
+   - Verdict per feature: `verified` | `parity-gap` | `regression`
+   - Features with parity gaps or regressions go back to must-fix list
+2. Update parity matrix: only features Suzuha marks `verified` count toward `verified_features`
+3. Update state: `parity_pct` = `verified_features / total_features * 100`
+4. If any features have `parity-gap` or `regression` → back to **Phase 4** for those specific features
+5. When all ported features are `verified` → **Phase 7**
 
 ---
 
@@ -308,25 +334,31 @@ Skip this phase if `bypass_playwright: true` (but log warning).
 2. **Production build verification** (if applicable):
    - `pnpm build` / `npm run build` / equivalent must succeed
    - No build warnings for ported code
-3. **Update living documents**:
-   - `PARITY_REPORT.md` — final parity percentage and per-feature status
+3. **Stub scan** — run `grep -rn "TODO\|FIXME\|HACK\|PLACEHOLDER" src/` (or equivalent for target stack). If any results in non-test files:
+   - Each is a **must-fix** item. Do NOT proceed to completion.
+   - Back to **Phase 6** to fix stubs, then re-run Phase 6b verification.
+4. **Test parity check**:
+   - Update `target_test_count` by counting all test cases in target.
+   - Calculate `test_parity_pct = target_test_count / source_test_count * 100`.
+   - If `test_parity_pct < 50%` → do NOT declare convergence. Back to **Phase 4** to write missing parity tests.
+5. **Update living documents**:
+   - `PARITY_REPORT.md` — final parity percentage, per-feature status, test counts (source vs target)
    - `SHIFT_LOG.md` — summary of this migration cycle
    - `README.md` — setup and usage instructions for the target project
-4. **Final parity check**:
-   - If `parity_pct < 100` and medium/low priority features remain unported:
-     - If `leap_count < max_iterations * 0.8` → back to **Phase 4** for remaining features
-     - If budget tight → checkpoint and note remaining features in `PARITY_REPORT.md`
-   - If all features ported and verified → complete
-5. **Commit**: `shift: worldline converged — [parity_pct]% parity, [ported]/[total] features`
-6. **Completion**: If all features ported OR budget exhausted:
+6. **Final parity check**:
+   - If unported features remain AND `leap_count < max_iterations * 0.8` → back to **Phase 4**
+   - If unported features remain AND budget tight → checkpoint and note remaining features in `PARITY_REPORT.md`
+   - If all features `verified` (not just `ported`) AND test parity ≥ 50% AND zero TODO stubs → complete
+7. **Commit**: `shift: worldline converged — [parity_pct]% parity, [verified]/[total] features, [target_test_count]/[source_test_count] tests`
+8. **Completion**: If all convergence gates pass:
    - Set `phase: el-psy-kongroo`
    - Output `<promise>EL_PSY_KONGROO</promise>`
    - Print final summary:
      ```
      Worldline Shift Complete.
      Source: [source_stack] → Target: [target_stack]
-     Features ported: [N]/[M] ([parity_pct]%)
-     Test coverage: [coverage_pct]%
+     Features verified: [N]/[M] ([parity_pct]%)
+     Test parity: [target_test_count]/[source_test_count] ([test_parity_pct]%)
      Total leaps: [leap_count]
      ```
    Otherwise → back to **Phase 4** for remaining features.

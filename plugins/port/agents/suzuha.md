@@ -48,6 +48,13 @@ For each feature, document:
 - Background tasks, notifications, scheduled work are features
 - Configuration and settings are features
 
+**Granularity rules**:
+- Every distinct user action within a screen is a separate feature: submitting a form, opening a dialog, capturing a signature, downloading a PDF, toggling a view mode — each is its own feature
+- If a feature has more than 3 source files, decompose it into sub-features
+- Target ratio: approximately 1 feature per 2-3 source files
+- Example: "OT Page" with request form, signature capture, and history view → 3 features (F-005a: OT Request Form, F-005b: OT Signature Capture, F-005c: OT History View), not 1
+- A 74-file project should produce 25-40 features, not 10
+
 At the end, provide a summary:
 ```
 Total features: [N]
