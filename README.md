@@ -94,10 +94,58 @@ To restart from a specific phase, edit `reading-steiner.md` and change the `phas
 
 ## Installation
 
-Copy to `~/.claude/commands/`:
+### 1. Register slash commands (global)
+
+Copy all skill commands to `~/.claude/commands/`:
+
 ```bash
-cp commands/dmail.md ~/.claude/commands/
-cp commands/cancel-dmail.md ~/.claude/commands/
+# D-Mail
+cp plugins/dmail/commands/dmail.md ~/.claude/commands/
+cp plugins/dmail/commands/cancel-dmail.md ~/.claude/commands/
+cp plugins/dmail/commands/recursive-mother-goose.md ~/.claude/commands/
+
+# Worldline Shift (Port)
+cp plugins/port/commands/worldline-shift.md ~/.claude/commands/
+cp plugins/port/commands/cancel-worldline-shift.md ~/.claude/commands/
 ```
 
-Copy the stop hook and register it in `~/.claude/settings.json` (see `hooks/hooks.json` for the format).
+### 2. Install stop hooks
+
+Copy the stop hooks to `~/.claude/`:
+
+```bash
+mkdir -p ~/.claude/dmail/hooks ~/.claude/port/hooks
+cp plugins/dmail/hooks/stop-hook.sh ~/.claude/dmail/hooks/
+cp plugins/port/hooks/stop-hook.sh ~/.claude/port/hooks/
+```
+
+### 3. Register hooks in `~/.claude/settings.json`
+
+Add both hooks under the `Stop` event:
+
+```json
+{
+  "hooks": {
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"~/.claude/dmail/hooks/stop-hook.sh\""
+          },
+          {
+            "type": "command",
+            "command": "bash \"~/.claude/port/hooks/stop-hook.sh\""
+          }
+        ]
+      }
+    ]
+  }
+}
+```
+
+> **Windows**: Use full paths (e.g. `C:/Users/<you>/.claude/...`) instead of `~` in `settings.json`. The stop hooks require Git Bash — ensure `bash` is on your PATH.
+
+### Keeping skills up to date
+
+The files in `~/.claude/commands/` and `~/.claude/*/hooks/` are plain copies — they won't auto-update when this repo changes. Re-run the copy commands above after pulling updates.
