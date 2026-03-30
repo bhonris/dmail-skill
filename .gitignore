@@ -1,4 +1,5 @@
 fg_exp_*/
+.playwright-mcp/
 .claude/settings.json
 
 documents/recursive-mother-goose.md
@@ -6,3 +7,4 @@ plugins/dmail/commands/recursive-mother-goose.md
 plugins/dmail/agents/rmg-*.md
 plugins/dmail/hooks/rmg-stop-hook.sh
 reading-steiner.md
+*.png
