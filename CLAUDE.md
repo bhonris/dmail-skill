@@ -124,11 +124,13 @@ Port takes a **source project** in one tech stack and autonomously migrates it t
 | 1 | Source Reconnaissance | Moeka + Suzuha exhaustively analyze source, extract feature inventory |
 | 2 | Attractor Field Mapping | Suzuha creates parity matrix; Ruka maps all data models & API contracts |
 | 3 | Convergence Architecture | Kurisu proposes Alpha (direct map) + Beta (idiomatic) target architectures |
-| 4 | Worldline Migration | Per-feature TDD porting: Moeka reads → Daru ports with parity tests |
-| 4b | Cross-Worldline Verification | Playwright browser verification for web targets |
-| 5 | Divergence Audit | Future Okabe ×3 review with parity focus |
+| 4 | Worldline Migration | Page-composition TDD porting: Moeka reads source+parent → Daru ports with parity+composition tests |
+| 4c | Integration Wiring | Verify all components wired into parents, orphan scan, composition test check (every 3 leaps) |
+| 4b | Cross-Worldline Verification | Per-page, per-button Playwright browser verification for web targets |
+| 5 | Divergence Audit | Future Okabe ×3 review with parity, orphan detection, and placeholder scan focus |
 | 6 | Convergence Fix | Fix all must-fix review items |
-| 7 | Shift Checkpoint | Final verification; if features remain → Phase 4; else complete |
+| 6b | Parity Verification | Suzuha verifies every "ported" feature matches source (integration + behavior) |
+| 7 | Shift Checkpoint | Final verification + orphan/placeholder scans; if features remain → Phase 4; else complete |
 
 ### Key Differences from D-Mail
 
@@ -136,7 +138,10 @@ Port takes a **source project** in one tech stack and autonomously migrates it t
 - **Parity Matrix**: Master tracking document mapping every source feature to its target equivalent
 - **Data Contract Mapping**: Field-by-field mapping of all models, APIs, state, storage, routes
 - **Parity Tests**: Tests written to verify the target behaves identically to the source
-- **Parity Percentage**: Tracks `ported_features / total_features` rather than just coverage
+- **Parity Percentage**: Tracks `integrated_features / total_features` — only features wired into their parent pages count
+- **Page Composition Porting**: Features are ported as full page compositions (parent + all children), not isolated components
+- **Integration Wiring (Phase 4c)**: Mandatory check every 3 leaps that catches orphan components, placeholder handlers, and missing composition tests
+- **Status Lifecycle**: `not-started → in-progress → coded → integrated → verified` — "coded" means component exists; "integrated" means it's actually wired into the app
 
 ### Sub-Agents
 
