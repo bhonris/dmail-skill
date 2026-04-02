@@ -623,9 +623,23 @@ When criteria met → **Phase 4c** (Integration Wiring) → **Phase 4b** (web ta
    - If unported features remain AND `leap_count < max_iterations * 0.8` → back to **Phase 4**
    - If unported features remain AND budget tight → checkpoint and note remaining features in `PARITY_REPORT.md`
    - If any features are `coded` but not `integrated` → back to **Phase 4c** (Integration Wiring)
-   - If all features `verified` (not just `coded` or `integrated`) AND test parity ≥ 90% AND zero TODO stubs AND zero orphan components AND zero placeholder handlers → complete
-7. **Commit**: `shift: worldline converged — [parity_pct]% parity, [verified]/[total] features, [target_test_count]/[source_test_count] tests`
-8. **Completion**: If all convergence gates pass:
+   - If all features `verified` (not just `coded` or `integrated`) AND test parity ≥ 90% AND zero TODO stubs AND zero orphan components AND zero placeholder handlers → proceed to step 7 (Final Playwright Run)
+7. **Final Playwright Run** (web/PWA targets only — MANDATORY before completion):
+   - This is the last gate before the shift is declared complete. It cannot be skipped.
+   - If `bypass_playwright: true` → skip this step, note in PARITY_REPORT: `"Final Playwright run SKIPPED — bypass_playwright is true. Manual verification required."`
+   - If `bypass_playwright: false`:
+     - Verify Playwright MCP tools are present. If not → HARD STOP: commit state as `phase: final-playwright-blocked`, tell user to start Playwright MCP and re-invoke.
+     - Start the target dev server.
+     - Run a **complete end-to-end sweep** of the entire app — every page, every interactive element, every navigation path:
+       - Navigate to every route in `documents/source-map.md`
+       - Click every button, link, tab, and form control
+       - Verify every action produces the correct result (no console.log handlers, no 404s, no blank pages, no placeholder text)
+       - Take a screenshot of each page and record it in SHIFT_LOG
+     - Any failure → **MUST-FIX**: back to **Phase 4** to fix, then re-run Phase 4c → Phase 4b → return here
+     - All pages pass → proceed to step 8
+   - Non-web targets (`cli | api | library | mobile`) → skip this step, proceed directly to step 8.
+8. **Commit**: `shift: worldline converged — [parity_pct]% parity, [verified]/[total] features, [target_test_count]/[source_test_count] tests`
+9. **Completion**: If all convergence gates pass:
    - Set `phase: el-psy-kongroo`
    - Output `<promise>EL_PSY_KONGROO</promise>`
    - Print final summary:
