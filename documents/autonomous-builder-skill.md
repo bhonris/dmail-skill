@@ -74,7 +74,7 @@ Outer loop (ralph-loop stop-hook style) — runs until budget exhausted
 │
 │  Phase sequence (repeating):
 │  Divergence Analysis → Worldline Selection → Time Leap Development
-│  → [Divergence Meter Reading] → Christina's Analysis
+│  → [Divergence Meter Reading] → Future Okabe's Review
 │  → Worldline Convergence → Worldline Checkpoint → Worldline Expansion
 │  → back to Worldline Selection (new features) → ...
 │
@@ -152,7 +152,7 @@ The stop hook checks `git log --oneline -1` before deciding whether to continue.
 
 ## Testing Strategy — The Divergence Meter
 
-D-Mail uses a two-tier verification model. The Divergence Meter must read stable before advancing to Christina's Analysis.
+D-Mail uses a two-tier verification model. The Divergence Meter must read stable before advancing to Future Okabe's Review.
 
 | Tier | Tooling | When | What it proves |
 |---|---|---|---|
@@ -370,11 +370,11 @@ All three are **committed alongside the code changes they describe** — never o
 4. Pass → update STEINER_LOG.md, commit `steiner: divergence-meter-stable`, advance to Phase 4
 5. Kill dev server
 
-**SERN rule**: If E2E fails 3× on the same assertion, log it as a `must-fix` for Christina's Analysis and advance anyway — don't let SERN hold the lab hostage.
+**SERN rule**: If E2E fails 3× on the same assertion, log it as a `must-fix` for Future Okabe's Review and advance anyway — don't let SERN hold the lab hostage.
 
 ---
 
-### Phase 4 — Christina's Analysis
+### Phase 4 — Future Okabe's Review
 *Autonomous code review*
 
 **Goal**: Catch bugs, quality issues, and convention violations before declaring the worldline stable
@@ -436,7 +436,7 @@ The lab does not stop when acceptance criteria are met — it checkpoints and ex
 
 Okabe considers:
 - Features implied by the original prompt but not yet built
-- Improvements surfaced as `nice-to-have` in Christina's Analysis (not fixed yet)
+- Improvements surfaced as `nice-to-have` in Future Okabe's Review (not fixed yet)
 - Natural extensions of what's already there (e.g., built `add` and `list` → now suggest `export`, `search`, `categories`)
 - Quality improvements: performance, error handling, DX, accessibility
 - Test coverage gaps that were deferred

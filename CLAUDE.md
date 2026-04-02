@@ -64,7 +64,7 @@ Every built project follows this sequence:
 | 2 | Worldline Selection | Kurisu agent proposes Alpha (minimal) + Beta (clean) architectures |
 | 3 | Time Leap Development | TDD implementation loop |
 | 3b | Divergence Meter Reading | Playwright E2E verification (web projects only, non-negotiable) |
-| 4 | Christina's Analysis | 3× Future Okabe agents review in parallel |
+| 4 | Future Okabe's Review | 3× Future Okabe agents review in parallel |
 | 5 | Worldline Convergence | Fix all review findings |
 | 6 | Worldline Checkpoint | Git commit + docs update |
 | 7 | Worldline Expansion | Okabe ideates next features → back to Phase 2 |

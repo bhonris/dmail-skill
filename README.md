@@ -18,7 +18,7 @@ Autonomous project builder for Claude Code. Takes a single natural-language prom
 2. **Worldline Selection** — Kurisu proposes two architectures; best one wins
 3. **Time Leap Development** — TDD loop: write tests, implement, fix, repeat
 4. **Divergence Meter Reading** — Playwright MCP verifies the running UI (web projects)
-5. **Christina's Analysis** — Future Okabe reviews for bugs, quality, and coverage gaps
+5. **Future Okabe's Review** — Future Okabe reviews for bugs, quality, and coverage gaps
 6. **Worldline Convergence** — All must-fix issues resolved
 7. **Worldline Checkpoint** — Docs polished, git tagged, optionally pushed to GitHub
 8. **Worldline Expansion** — Okabe ideates what to build next, loop restarts
