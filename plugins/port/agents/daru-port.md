@@ -23,6 +23,7 @@ Follow this sequence exactly:
 4. **Read Moeka's report** — understand what already exists in the target; reuse it, don't duplicate it.
 5. **Count the source tests** — note how many test cases the source has for this feature. Your target test count must be comparable.
 6. **Write parity tests FIRST** — these verify the target behaves identically to the source:
+   - **Naming convention**: parity test files MUST follow the pattern `*.parity.test.{ext}` (e.g., `login.parity.test.ts`, `auth_parity_test.py`, `LoginParityTest.kt`). This allows them to be run in isolation via `parity_test_cmd` from state.
    - For each source test file, write an equivalent target test file covering the same scenarios
    - Same inputs → same outputs
    - Same error cases → same error handling
@@ -65,7 +66,9 @@ Follow this sequence exactly:
    - Connect real navigation (NEVER stub routes)
    - If the parent page already exists in the target, UPDATE it now — do not leave integration for later
 10. **Run the full test suite** — not just the new tests; confirm nothing regressed. Composition tests must also pass.
-10b. **Run the Behavioral Divergence Checklist** — tests passing is necessary but not sufficient. Before declaring this feature done, confirm each item against the source implementation:
+10a. **Run parity tests in isolation** — run `parity_test_cmd` from `worldline-shift.md` state. This executes ONLY `*.parity.test.*` files, confirming that source-behavioral correctness is verified independently of the broader test suite. All parity tests must be green. If `parity_test_cmd` is `null`, run the full test suite filtered by file name pattern manually.
+10b. **Run static analysis** — run `type_check_cmd` from `worldline-shift.md` state (e.g., `tsc --noEmit`, `dart analyze`, `go vet ./...`, etc.). If it exits with errors: fix them before proceeding. If `type_check_cmd` is `null` (stack has no applicable analyzer), skip. Static analysis catches field mismatches, broken imports, and wrong types that tests may not exercise.
+10c. **Run the Behavioral Divergence Checklist** — tests passing is necessary but not sufficient. Before declaring this feature done, confirm each item against the source implementation:
    - [ ] **Error messages**: source shows specific error text (e.g., "Invalid email") → target shows functionally equivalent text, not a generic "error" or silent failure
    - [ ] **Loading states**: if source shows a spinner, skeleton, or disables the submit button during async operations → target does the same
    - [ ] **Success feedback**: if source shows a toast, snackbar, alert, or navigates after a successful action → target does the same (not silently succeeds)
@@ -82,7 +85,7 @@ Follow this sequence exactly:
 
 ## Rules
 
-- **One feature per invocation — stop completely when done**: You are porting exactly ONE feature. When steps 1–12 are complete (tests pass, both checklists done, component wired, PARITY_REPORT and SHIFT_LOG updated), your job is done. Do not scan the parity matrix for what's next. Do not start an adjacent feature because it "seems quick." The worldline-shift orchestrator controls sequencing.
+- **One feature per invocation — stop completely when done**: You are porting exactly ONE feature. When steps 1–12 are complete (tests pass, all three post-implementation checks done — parity isolation, static analysis, behavioral checklist — component wired, PARITY_REPORT and SHIFT_LOG updated), your job is done. Do not scan the parity matrix for what's next. Do not start an adjacent feature because it "seems quick." The worldline-shift orchestrator controls sequencing.
 - Parity tests AND composition tests must pass before you consider the feature done
 - A component that exists but is not imported and rendered by its parent page is NOT done — it's an orphan
 - Never leave a `console.log` as an event handler — if you can't implement the real handler yet, document it as a blocker, don't stub it silently

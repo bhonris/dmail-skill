@@ -96,6 +96,11 @@ review_items:
 max_iterations: [N]
 push_to_github: [true|false]
 bypass_playwright: [true|false]
+type_check_cmd: [null or detected command]
+build_cmd: [null or detected command]
+parity_test_cmd: [null or derived run command]
+has_localization: [true|false]
+localization_file_pattern: [null or detected glob/path]
 ```
 
 ---
@@ -127,13 +132,61 @@ bypass_playwright: [true|false]
    - `cli` → Node + TypeScript
    - `python` → Python + pytest
    - `flutter` → Flutter + Dart
-5. **Create target directory**, `git init`, create initial files:
-   - `worldline-shift.md` (state file)
+5. **Detect stack-specific commands** — probe the source and target stacks to populate the four new state fields. These are referenced throughout later phases; never hardcode commands.
+
+   **`type_check_cmd`** — the static analysis command for the target stack:
+   | Target stack indicator | Command |
+   |------------------------|---------|
+   | `tsconfig.json` present | `tsc --noEmit` |
+   | `pubspec.yaml` (Dart/Flutter) | `dart analyze` |
+   | `go.mod` (Go) | `go vet ./...` |
+   | `Cargo.toml` (Rust) | `cargo check` |
+   | `mypy.ini` / `.mypy.ini` / `[tool.mypy]` in `pyproject.toml` | `mypy .` |
+   | `pyrightconfig.json` | `pyright` |
+   | `build.gradle` / `gradlew` (Kotlin/Android) | `./gradlew compileKotlin --no-daemon` |
+   | `pom.xml` (Java/Maven) | `./mvnw compile -q` |
+   | None of the above | `null` (gate is skipped) |
+
+   **`build_cmd`** — the production build command for the target stack:
+   | Target stack indicator | Command |
+   |------------------------|---------|
+   | `vite.config.*` or `package.json` with `"build"` script | `pnpm build` (or `npm run build` / `yarn build` based on lock file) |
+   | `pubspec.yaml` (Flutter web target) | `flutter build web` |
+   | `go.mod` | `go build ./...` |
+   | `Cargo.toml` | `cargo build` |
+   | `build.gradle` | `./gradlew assembleRelease --no-daemon` |
+   | `pom.xml` | `./mvnw package -q -DskipTests` |
+   | Python (library/CLI) | `python -m build` if `pyproject.toml` has `[build-system]`, else `null` |
+   | None of the above | `null` (gate is skipped) |
+
+   **`parity_test_cmd`** — command to run ONLY files matching `*.parity.test.*`:
+   | Test runner (inferred from `test_cmd`) | Parity filter command |
+   |----------------------------------------|----------------------|
+   | jest | `{test_cmd} --testPathPattern=\\.parity\\.test\\.` |
+   | vitest | `{test_cmd} --reporter=verbose parity.test` |
+   | pytest | `pytest -k parity` |
+   | go test | `go test -run Parity ./...` |
+   | flutter test | `flutter test --name parity` |
+   | gradle test | `./gradlew test --tests "*ParityTest" --no-daemon` |
+   | None matched | Same as `test_cmd` with `null` filter note |
+
+   **`has_localization` + `localization_file_pattern`** — scan the SOURCE project root for localization artifacts:
+   - `*.arb` files anywhere → `has_localization: true`, pattern `**/*.arb`
+   - `res/values*/strings.xml` → `has_localization: true`, pattern `**/strings.xml`
+   - `*.lproj/Localizable.strings` → `has_localization: true`, pattern `**/*.strings`
+   - `*.po` or `*.pot` files → `has_localization: true`, pattern `**/*.po`
+   - A directory named `locales/`, `i18n/`, or `translations/` containing `*.json` files → `has_localization: true`, pattern `locales/**/*.json` (or equivalent)
+   - None found → `has_localization: false`, `localization_file_pattern: null`
+
+   Record all four fields in `worldline-shift.md` before touching the target directory.
+
+6. **Create target directory**, `git init`, create initial files:
+   - `worldline-shift.md` (state file, including all detected commands)
    - `documents/` directory
    - `SHIFT_LOG.md` (migration log — one entry per leap)
    - `PARITY_REPORT.md` (running parity status)
-6. **Initial commit**: `shift: init — worldline shift from [source_stack] to [target_stack]`
-7. → **Phase 1**
+7. **Initial commit**: `shift: init — worldline shift from [source_stack] to [target_stack]`
+8. → **Phase 1**
 
 ---
 
@@ -395,18 +448,39 @@ When criteria met → **Phase 4c** (Integration Wiring) → **Phase 4b** (web ta
 
    If composition tests are missing → write them now and ensure they pass.
 
-3. **Orphan Component Quick Scan:**
-   - For every `.tsx`/`.vue`/`.svelte` component file in `src/` (excluding test files):
+3. **Static Analysis Gate** (run if `type_check_cmd` is not `null`):
+   - Run `type_check_cmd` from state against the target project.
+   - Any errors → **MUST-FIX** immediately. Do not advance until the command exits clean.
+   - If `type_check_cmd` is `null` (stack has no applicable static analyzer), skip and note in SHIFT_LOG.
+   - This catches type mismatches, missing fields, and broken imports that tests may not exercise.
+
+4. **Build Gate** (run if `build_cmd` is not `null`):
+   - Run `build_cmd` from state against the target project.
+   - Any build errors or warnings on ported files → **MUST-FIX** before advancing.
+   - If `build_cmd` is `null`, skip and note in SHIFT_LOG.
+   - Running the build every 3 leaps catches broken exports and missing assets far earlier than Phase 7.
+
+5. **Route Coverage Diff** (run if `target_type` is `web | pwa | mobile`):
+   - Open `documents/source-map.md` and extract the complete route list from the **Routes Found** section.
+   - Run the equivalent route-extraction grep on the TARGET project (use the same patterns that were used for the source in Phase 1's Project Cartography, adapted to the target stack's routing idioms).
+   - Diff the two lists:
+     - Any source route not present in the target → **MUST-FIX**, add to must-fix list with the missing route
+     - Any target route with no source equivalent → note as **new/untracked route** in SHIFT_LOG (not a must-fix, but flag it)
+   - Skip if `target_type` is `cli | api | library`.
+
+6. **Orphan Component Quick Scan:**
+   - Adapt file extensions to the target stack (`.tsx`/`.jsx` for React, `.vue` for Vue, `.svelte` for Svelte, `.dart` for Flutter, `.kt` for Android, etc.). Exclude test files.
+   - For every component file in the target source tree:
      - Check if any other non-test file imports it
      - If not imported anywhere → **MUST-FIX** — wire it into the correct parent or remove it
-     - Exception: `App.tsx` root, page-level components imported by router
+     - Exception: root app entry point, page-level components imported by router config
 
-4. **Update parity matrix:**
-   - Features that pass all wiring checks → status `integrated`
+7. **Update parity matrix:**
+   - Features that pass all wiring checks (steps 1–6) → status `integrated`
    - Features that fail any check → status remains `coded`, add to must-fix list
 
-5. **Commit**: `shift: integration wiring — [N] features integrated, [M] wiring fixes applied`
-6. → **Phase 4b** (web targets) or back to **Phase 4** (if more features to port)
+8. **Commit**: `shift: integration wiring — [N] features integrated, [M] wiring fixes applied`
+9. → **Phase 4b** (web targets) or back to **Phase 4** (if more features to port)
 
 ---
 
@@ -487,10 +561,19 @@ When criteria met → **Phase 4c** (Integration Wiring) → **Phase 4b** (web ta
    - For each feature marked `ported`: read source, read target, read parity tests
    - Verdict per feature: `verified` | `parity-gap` | `regression`
    - Features with parity gaps or regressions go back to must-fix list
-2. Update parity matrix: only features Suzuha marks `verified` count toward `verified_features`
-3. Update state: `parity_pct` = `verified_features / total_features * 100`
-4. If any features have `parity-gap` or `regression` → back to **Phase 4** for those specific features
-5. When all ported features are `verified` → **Phase 7**
+2. **Localization Key Coverage** (run only if `has_localization: true`):
+   - List all localization files in the source using `localization_file_pattern`.
+   - Extract every string key from those source files (format is stack-dependent: keys in ARB files, `<string name="...">` in Android XML, keys in `.po` msgid fields, keys in JSON translation objects, etc.).
+   - Run the equivalent extraction on the TARGET project's localization files.
+   - Diff the two key sets:
+     - Keys present in source but missing from target → **MUST-FIX** (parity gap — missing strings will crash or show raw key names)
+     - Keys in target but absent from source → note as new/added strings in SHIFT_LOG (acceptable)
+   - A single missing key is a parity gap. If the diff is clean, note "Localization: all [N] keys present" in SHIFT_LOG.
+   - If `has_localization: false`, skip this step entirely.
+3. Update parity matrix: only features Suzuha marks `verified` count toward `verified_features`
+4. Update state: `parity_pct` = `verified_features / total_features * 100`
+5. If any features have `parity-gap` or `regression`, OR if localization key diff has must-fix items → back to **Phase 4** / **Phase 6** respectively
+6. When all ported features are `verified` AND localization keys are complete (or `has_localization: false`) → **Phase 7**
 
 ---
 
@@ -499,9 +582,9 @@ When criteria met → **Phase 4c** (Integration Wiring) → **Phase 4b** (web ta
 **Goal**: Final verification, documentation, and completion check.
 
 1. **Run full test suite** — must be 100% green.
-2. **Production build verification** (if applicable):
-   - `pnpm build` / `npm run build` / equivalent must succeed
-   - No build warnings for ported code
+2. **Production build verification** (if `build_cmd` is not `null`):
+   - Run `build_cmd` from state — must exit clean with no errors
+   - No build warnings on ported code
 3. **Stub scan** — run `grep -rn "TODO\|FIXME\|HACK\|PLACEHOLDER" src/` (or equivalent for target stack). If any results in non-test files:
    - Each is a **must-fix** item. Do NOT proceed to completion.
    - Back to **Phase 6** to fix stubs, then re-run Phase 6b verification.

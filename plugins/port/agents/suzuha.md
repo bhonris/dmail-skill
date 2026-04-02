@@ -101,11 +101,13 @@ If a circular dependency exists (F-A depends on F-B depends on F-A), document it
 
 ## Matrix
 
-| ID | Feature | Priority | Source Files | Target Files | Parity Tests | Status |
-|----|---------|----------|-------------|-------------|-------------|--------|
-| F-001 | [name] | critical | [files] | — | — | not-started |
-| F-002 | [name] | critical | [files] | — | — | not-started |
-| ... | ... | ... | ... | ... | ... | ... |
+| ID | Feature | Priority | Source Files | Target Files | Src Tests | Tgt Tests | Status |
+|----|---------|----------|-------------|-------------|-----------|-----------|--------|
+| F-001 | [name] | critical | [files] | — | — | — | not-started |
+| F-002 | [name] | critical | [files] | — | — | — | not-started |
+| ... | ... | ... | ... | ... | ... | ... | ... |
+
+**Src Tests** = number of test cases in the source for this feature (counted in Phase 1). **Tgt Tests** = filled in by Daru after porting. The ratio `Tgt Tests / Src Tests` must be ≥ 0.8 per feature for it to be eligible for `verified` status. Features with `—` in Src Tests had no source tests; Daru must write tests from behavior analysis.
 
 ## Status Key
 - `not-started` — not yet ported
@@ -145,6 +147,22 @@ For each feature marked as `coded` or `integrated`:
 7. **Verdict**: `verified` | `parity-gap` | `regression`
    - A feature CANNOT be `verified` if it fails any integration check (step 4)
    - A feature CANNOT be `verified` if composition tests are missing (step 6)
+   - A feature CANNOT be `verified` if its parity test count (`Tgt Tests`) is less than 80% of its source test count (`Src Tests`) — update the matrix column and flag it
+
+8. **Localization Key Coverage** (only if `has_localization: true` in `worldline-shift.md`):
+   - List source localization files using `localization_file_pattern`.
+   - Extract every string key from those files. The extraction method is format-dependent:
+     - ARB / JSON: top-level keys in the translation object
+     - Android XML: `name` attribute of `<string>` elements
+     - `.strings` (iOS): left-hand side of `"key" = "value";` pairs
+     - `.po` / `.pot`: `msgid` values
+     - Other formats: extract whatever acts as the lookup key for a translated string
+   - Run the same extraction on the TARGET project's localization files.
+   - Compute the diff:
+     - **Missing from target** (in source but not target) → `parity-gap` for every affected feature that uses those strings
+     - **Extra in target** (in target but not source) → note only, not a gap
+   - If no localization files exist in the target at all → `parity-gap: localization not ported`
+   - If `has_localization: false` → skip this step entirely
 
 Report format:
 ```markdown
@@ -172,6 +190,8 @@ Action items: [list]
 - Never approve a feature as "verified" if it is not imported and rendered by its parent page (orphan component)
 - Never approve a feature as "verified" if its event handlers are placeholders (`console.log`, `() => {}`)
 - Never approve a feature as "verified" if page composition tests are missing
+- Never approve a feature as "verified" if `Tgt Tests / Src Tests < 0.8` (when source tests exist)
+- Never approve any feature as "verified" if localization key diff has missing keys (when `has_localization: true`)
 - Flag any hardcoded values that differ between source and target
 - Flag any error handling differences (different error messages are ok, different error behavior is not)
 - Flag any missing edge case handling
