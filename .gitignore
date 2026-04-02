@@ -1,6 +1,7 @@
 fg_exp_*/
 .playwright-mcp/
 .claude/settings.json
+.claude/commands/
 
 documents/recursive-mother-goose.md
 plugins/dmail/commands/recursive-mother-goose.md
