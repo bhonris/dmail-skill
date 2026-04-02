@@ -69,6 +69,8 @@ Total features: [N]
 
 Given a feature inventory, produce a **parity matrix** that will be the master tracking document for the entire migration.
 
+Before writing the matrix, analyze which features use routes, data models, components, or auth state from other features. Build the dependency graph bottom-up: identify which features have no dependencies (these are leaves — port first), then which features depend only on leaves, and so on.
+
 ```markdown
 # Parity Matrix — [Source Stack] → [Target Stack]
 
@@ -76,6 +78,26 @@ Given a feature inventory, produce a **parity matrix** that will be the master t
 - **Total features**: [N]
 - **Ported**: 0 / [N] (0%)
 - **Verified**: 0 / [N] (0%)
+
+## Feature Dependencies
+
+| Feature | Depends On | Dependency Type | Notes |
+|---------|-----------|-----------------|-------|
+| F-003 | F-001 | hard | auth-gated screen; parity tests can't run without F-001 login ported |
+| F-007 | F-002, F-003 | hard | displays data from both; integration tests require both |
+| F-010 | F-005 | soft | reuses F-005's shared component; can stub it but coverage incomplete without F-005 |
+
+**Dependency types**:
+- `hard` — the dependent feature cannot be functionally ported or its parity tests written without the dependency already ported
+- `soft` — can be ported with a stub, but test coverage will be incomplete until the dependency is done; flag in parity matrix
+
+**Porting order** (topological sort — port top to bottom):
+1. [F-NNN: name] — no dependencies
+2. [F-NNN: name] — no dependencies
+3. [F-NNN: name] — depends on 1
+4. ...
+
+If a circular dependency exists (F-A depends on F-B depends on F-A), document it explicitly and port the smallest atomic unit first, stubbing the circular reference.
 
 ## Matrix
 
@@ -97,7 +119,7 @@ Given a feature inventory, produce a **parity matrix** that will be the master t
 [To be filled during migration — platform-specific features with no direct equivalent]
 ```
 
-**Ordering**: Critical features first, then high, medium, low. Within priority, group by domain.
+**Ordering**: Within priority, group by domain. But always respect the dependency graph — a lower-priority feature that is a hard dependency of a critical feature must be ported before that critical feature.
 
 ---
 

@@ -120,3 +120,69 @@ Map how application state flows in source vs target:
 - **Preserve nullability**: If a field is nullable in source, it must be nullable (or `| undefined`) in target.
 - **Document enums**: List all enum values — one missing value is a divergence.
 - **Order matters for lists**: If source returns items sorted by `created_at DESC`, document that.
+
+---
+
+## Self-Validation Protocol
+
+After writing `documents/data-contracts.md`, run this validation pass before reporting completion. Do not skip it.
+
+### Step 1: Model Coverage Check
+
+Search the source codebase for every class, struct, type alias, enum, interface, and schema definition. Adapt the grep pattern to the detected source stack:
+
+```bash
+# Dart/Flutter
+grep -rn "^class \|^abstract class \|^enum \|^typedef " lib/ --include="*.dart" | grep -v "test" | sort
+
+# TypeScript/React
+grep -rn "^interface \|^type \|^enum \|^class " src/ --include="*.ts" --include="*.tsx" | grep -v "test" | sort
+
+# Kotlin/Android
+grep -rn "^data class \|^class \|^enum class \|^interface " app/src/ --include="*.kt" | grep -v "test" | sort
+
+# Python
+grep -rn "^class \|TypedDict\|@dataclass" --include="*.py" | grep -v "test" | sort
+```
+
+For every name found, confirm it appears in `data-contracts.md` — either as a documented model or as an explicitly noted exclusion (e.g., "internal utility class, no porting needed"). If any name is absent and not noted as excluded: add it now.
+
+### Step 2: Field Completeness Spot-Check
+
+Pick the 3 models with the most fields. For each:
+1. Open the source file.
+2. Count every field/property defined.
+3. Count the corresponding rows in the data-contracts.md table for that model.
+4. If counts differ: find the missing fields and add them.
+
+### Step 3: Enum Value Completeness
+
+For every enum documented in Section 1, open the source enum definition and compare all values. A single missing enum value is a runtime divergence.
+
+### Step 4: Validation Rule Coverage
+
+Search source for validation constraints:
+
+```bash
+grep -rn "RegExp\|regex\|minLength\|maxLength\|min:\|max:\|required:\|@NotNull\|@Min\|@Max\|Validators\." \
+  lib/ src/ app/ --include="*.dart" --include="*.ts" --include="*.kt" | grep -v "test" | head -60
+```
+
+Confirm each constraint appears in the "Validation rules" field of the relevant model. If any are absent, add them.
+
+### Coverage Report
+
+Append this section to the end of `data-contracts.md` before reporting completion:
+
+```markdown
+## Coverage Report
+
+- Source model/type names found via grep: [N]
+- Models documented in data-contracts.md: [N]
+- Models explicitly excluded (utilities/internals): [N] — [names]
+- Any missing: [none | list]
+- Enums with all values confirmed: [N/M]
+- Validation rules captured: [yes | partial — list gaps]
+```
+
+The document is not complete until this section is present and shows no missing models.

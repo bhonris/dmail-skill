@@ -125,7 +125,33 @@ bypass_playwright: [true|false]
    - Test structure and existing test patterns
    - Configuration files and environment variables
    - Build system and scripts
-2. **Spawn Suzuha** (source analyzer) with Moeka's report:
+1b. **Run Project Cartography** — before spawning Suzuha, execute these shell commands against `source_path` to produce a verified file map. Adapt patterns to the detected source stack:
+
+   ```bash
+   # Full file listing (adapt root dir to source stack: lib/ for Flutter, src/ for TS, app/src/ for Android)
+   find lib -type f -name "*.dart" | sort                                    # Flutter/Dart
+   find src -type f \( -name "*.ts" -o -name "*.tsx" \) | sort              # React/TS
+   find app/src -type f -name "*.kt" | sort                                  # Android/Kotlin
+
+   # Routes / navigation
+   grep -rn "routes\|GoRoute\|pushNamed\|Navigator\|\.go(" lib/ --include="*.dart" | head -80
+   grep -rn "Route\|useNavigate\|<Link\|createRouter\|router" src/ --include="*.tsx" | head -80
+
+   # Models / schemas (data layer — exclude test files)
+   grep -rn "^class \|^abstract class \|^enum \|^typedef " lib/ --include="*.dart" | grep -v "_test\|test/" | sort
+   grep -rn "^interface \|^type \|^enum \|^class " src/ --include="*.ts" | grep -v "\.test\.\|\.spec\." | sort
+
+   # API calls / service layer
+   grep -rn "http\.\|dio\.\|fetch(\|ApiClient\|Repository\|\.get(\|\.post(" lib/ --include="*.dart" | head -60
+   grep -rn "fetch(\|axios\.\|useQuery\|useMutation\|api\." src/ --include="*.ts" --include="*.tsx" | head -60
+
+   # Tests
+   find . -type f \( -name "*.test.*" -o -name "*_test.*" -o -name "*.spec.*" \) | sort
+   ```
+
+   Write the output to `documents/source-map.md` with sections: **File Count by Directory**, **Routes Found**, **Model/Class Names Found**, **API Call Sites Found**, **Test Files Found**. This document is the ground truth — Suzuha must account for every file in it.
+
+2. **Spawn Suzuha** (source analyzer) with Moeka's report AND `documents/source-map.md`:
    - Extract **complete feature inventory** → write to `documents/feature-inventory.md`
    - Format per feature:
      ```
@@ -143,6 +169,7 @@ bypass_playwright: [true|false]
    - Prioritize: critical path first, then high-value, then the rest
    - Group features by domain/module for logical porting order
    - **Granularity rule**: Every distinct user action (submit form, open dialog, capture signature, download PDF) is a separate feature. If a source "feature" has more than 3 source files, decompose it into sub-features. Target ratio: ~1 feature per 2-3 source files. A 74-file project should produce 25-40 features, not 10.
+   - **File reconciliation**: At the end of the inventory, Suzuha must append a `## File Reconciliation` table mapping every file from `source-map.md` to the feature(s) it belongs to (or marking it as a shared utility with no dedicated feature). Any unaccounted file is a gap — add a feature or explicitly exclude it.
 3. **Count source tests**: Run the source test suite or count test files/cases. Record as `source_test_count` in state.
 4. **Update state**: `phase: source-recon`, update `total_features`, `source_test_count`
 5. **Commit**: `shift: source reconnaissance — [N] features inventoried, [M] source tests counted`
@@ -178,6 +205,7 @@ bypass_playwright: [true|false]
      |-------------|-----------|-------------|-----------|-------|
      | user_id | String | userId | string | |
      ```
+   - **Ruka must run the Self-Validation Protocol** from her spec before reporting completion. The data contracts document is not finished until the `## Coverage Report` section is appended and shows no missing models.
 3. **Update state**: `phase: attractor-field`
 4. **Commit**: `shift: attractor field mapped — [N] features, [M] data models`
 5. → **Phase 3**
@@ -219,7 +247,14 @@ bypass_playwright: [true|false]
 
 **Goal**: Port one feature at a time with TDD, maintaining strict parity.
 
-For each unported feature from the parity matrix (in priority order):
+For each unported feature, select the next using this dependency-aware protocol:
+
+1. **Consult the dependency graph** in `documents/parity-matrix.md` (Feature Dependencies section).
+2. **Hard dependencies must be ported first**: Never select a feature whose hard dependencies are not yet at `ported` status. If the highest-priority unported feature has an unmet hard dependency, port the dependency first regardless of its own priority ranking.
+3. **Among eligible features** (all hard dependencies met): select by priority (critical → high → medium → low).
+4. **Document the selection**: When spawning Daru, include in the handoff which features this feature hard-depends on and confirm they are already `ported`.
+
+Then:
 
 1. **Spawn Moeka** to read the target project's current state.
 2. **Spawn Moeka** to re-read the source feature's implementation (specific files from inventory).
@@ -260,6 +295,7 @@ When criteria met → **Phase 4b** (web targets) or **Phase 5** (non-web targets
 | Source feature is broken/buggy | Port the intended behavior, not the bug; note in parity matrix |
 | Feature stuck 3 sessions | Mark `deferred`, move to next, retry after others complete |
 | Source has no tests for a feature | Write tests based on source code behavior analysis, not guessing |
+| Dependency graph says F-X must come before F-Y | Port F-X first, even if F-Y has higher stated priority — a feature cannot be meaningfully tested without its hard dependencies |
 
 ---
 
