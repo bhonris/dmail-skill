@@ -156,8 +156,6 @@ To cancel a running loop:
 | Worldline Shift | The `/worldline-shift` prompt — migrating from one worldline (stack) to another |
 | Attractor Field | The set of features that must remain constant across worldlines (parity matrix) |
 | Convergence | Making the target match the source's full functionality |
-| Suzuha | Time traveler who has seen both worldlines — source analyzer and parity verifier |
-| Ruka | The one who exists in both worldlines — data model and API contract mapper |
 | Parity Matrix | Master tracking of every source feature and its target equivalent |
 | Status Lifecycle | `not-started → in-progress → coded → integrated → verified` |
 | El Psy Kongroo | 100% parity reached or budget exhausted — shift complete |
