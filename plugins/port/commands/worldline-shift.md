@@ -480,7 +480,9 @@ When criteria met → **Phase 4c** (Integration Wiring) → **Phase 4b** (web ta
    - Features that fail any check → status remains `coded`, add to must-fix list
 
 8. **Commit**: `shift: integration wiring — [N] features integrated, [M] wiring fixes applied`
-9. → **Phase 4b** (web targets) or back to **Phase 4** (if more features to port)
+9. **Route**:
+   - `target_type` is `web | pwa` → **always go to Phase 4b** (browser verification of currently integrated features). After Phase 4b completes, return to Phase 4 if unported features remain, else Phase 5.
+   - `target_type` is `cli | api | library | mobile` → back to **Phase 4** if unported features remain, else **Phase 5**.
 
 ---
 
@@ -521,8 +523,9 @@ When criteria met → **Phase 4c** (Integration Wiring) → **Phase 4b** (web ta
    - Interactive element triggers `console.log` instead of real action
 
 5. Document all discrepancies with page, element, expected behavior, actual behavior.
-6. If failures found → back to **Phase 4** to fix the specific features, then re-run **Phase 4c** for wiring.
-7. If all pages pass → mark passing features as `verified` in parity matrix → **Phase 5**.
+6. If failures found → back to **Phase 4** to fix the specific features, then re-run **Phase 4c** → **Phase 4b** again.
+7. If all integrated pages pass → mark passing features as `verified` in parity matrix.
+8. **Route**: if unported features remain in the parity matrix → back to **Phase 4**. If all features are `verified` → **Phase 5**.
 
 ---
 
