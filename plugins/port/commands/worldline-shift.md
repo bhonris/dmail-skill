@@ -614,7 +614,7 @@ When criteria met → **Phase 4c** (Integration Wiring) → **Phase 4b** (web ta
 4. **Test parity check**:
    - Update `target_test_count` by counting all test cases in target.
    - Calculate `test_parity_pct = target_test_count / source_test_count * 100`.
-   - If `test_parity_pct < 80%` → do NOT declare convergence. Back to **Phase 4** to write missing parity tests.
+   - If `test_parity_pct < 90%` → do NOT declare convergence. Back to **Phase 4** to write missing parity tests.
 5. **Update living documents**:
    - `PARITY_REPORT.md` — final parity percentage, per-feature status, test counts (source vs target)
    - `SHIFT_LOG.md` — summary of this migration cycle
@@ -623,7 +623,7 @@ When criteria met → **Phase 4c** (Integration Wiring) → **Phase 4b** (web ta
    - If unported features remain AND `leap_count < max_iterations * 0.8` → back to **Phase 4**
    - If unported features remain AND budget tight → checkpoint and note remaining features in `PARITY_REPORT.md`
    - If any features are `coded` but not `integrated` → back to **Phase 4c** (Integration Wiring)
-   - If all features `verified` (not just `coded` or `integrated`) AND test parity ≥ 80% AND zero TODO stubs AND zero orphan components AND zero placeholder handlers → complete
+   - If all features `verified` (not just `coded` or `integrated`) AND test parity ≥ 90% AND zero TODO stubs AND zero orphan components AND zero placeholder handlers → complete
 7. **Commit**: `shift: worldline converged — [parity_pct]% parity, [verified]/[total] features, [target_test_count]/[source_test_count] tests`
 8. **Completion**: If all convergence gates pass:
    - Set `phase: el-psy-kongroo`
