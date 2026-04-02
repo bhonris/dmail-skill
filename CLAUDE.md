@@ -19,10 +19,12 @@ claude_skills/
     │   │   ├── dmail.md              # Main skill (phase logic)
     │   │   └── cancel-dmail.md       # Halt command
     │   ├── agents/
+    │   │   ├── faris.md              # Market researcher (Cheshire Break — runs before Okabe)
     │   │   ├── okabe.md              # Spec writer + expansion ideator (Mad Scientist)
     │   │   ├── daru.md               # Coder (Super Hacker)
     │   │   ├── kurisu.md             # Architecture proposer (dual-worldline)
     │   │   ├── moeka.md              # Codebase explorer (reads before building)
+    │   │   ├── mayuri.md             # User reviewer (final usability check)
     │   │   └── future-okabe.md       # Parallel code reviewers (3 dimensions)
     │   └── hooks/
     │       ├── hooks.json            # Hook registration manifest
@@ -58,7 +60,7 @@ Every built project follows this sequence:
 | Phase | Name | Purpose |
 |-------|------|---------|
 | 0 | Initialization | Setup state file, git repo, install deps |
-| 1 | Divergence Analysis | Okabe agent writes full feature spec |
+| 1 | Divergence Analysis | Faris researches existing solutions; Okabe writes full feature spec |
 | 2 | Worldline Selection | Kurisu agent proposes Alpha (minimal) + Beta (clean) architectures |
 | 3 | Time Leap Development | TDD implementation loop |
 | 3b | Divergence Meter Reading | Playwright E2E verification (web projects only, non-negotiable) |
@@ -203,5 +205,7 @@ All naming is thematic — it's cosmetic, not functional:
 - "Worldline Shift" = `/worldline-shift` — migrating from one worldline (stack) to another
 - "Attractor Field" = the set of features that must remain constant across worldlines (parity matrix)
 - "Convergence" = making the target match the source's functionality
+- "Cheshire Break" = Faris NyanNyan's market research phase (existing solutions, differentiation gaps)
+- "Mayuri" = user-perspective final reviewer before a worldline is declared stable
 - "Suzuha" = the time traveler who has seen both worldlines (source analyzer + parity verifier)
 - "Ruka" = the one who exists in both worldlines (data contract mapper)
