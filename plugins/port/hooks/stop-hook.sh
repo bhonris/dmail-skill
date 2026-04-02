@@ -24,7 +24,7 @@ session_id=$(grep '^session_id:' "$STATE_FILE" | head -1 | sed 's/^session_id: *
 prev_head=$(grep '^prev_head:' "$STATE_FILE" | head -1 | sed 's/^prev_head: *//' | tr -d '[:space:]')
 sern_count=$(grep '^sern_interference_count:' "$STATE_FILE" | head -1 | sed 's/^sern_interference_count: *//' | tr -d '[:space:]')
 parity_pct=$(grep '^parity_pct:' "$STATE_FILE" | head -1 | sed 's/^parity_pct: *//' | tr -d '[:space:]')
-ported=$(grep '^ported_features:' "$STATE_FILE" | head -1 | sed 's/^ported_features: *//' | tr -d '[:space:]')
+ported=$(grep '^integrated_features:' "$STATE_FILE" | head -1 | sed 's/^integrated_features: *//' | tr -d '[:space:]')
 total=$(grep '^total_features:' "$STATE_FILE" | head -1 | sed 's/^total_features: *//' | tr -d '[:space:]')
 blocked_on=$(grep '^blocked_on:' "$STATE_FILE" | head -1 | sed 's/^blocked_on: *//' | tr -d '[:space:]')
 
