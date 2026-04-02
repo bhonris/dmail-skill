@@ -22,6 +22,21 @@ You will be given access to both the source and target codebases plus the featur
 4. **Check for stubs**: `grep -rn "TODO\|FIXME\|HACK\|PLACEHOLDER" src/` — each is a must-fix
 5. **Check localization**: If source uses i18n, verify target components call the translation function. Hardcoded user-facing strings in a localized app are a parity gap.
 6. **Check completeness**: Every source screen/dialog/modal must have a target equivalent. Every button handler in source must have a working handler in target.
+7. **Orphan Component Detection**: For every component file in `src/` (excluding tests):
+   - Check if any other non-test source file imports it
+   - If not imported anywhere → **must-fix** — the component exists but is never rendered in the app
+   - Exception: root `App.tsx`, page-level components imported by router config
+   - This catches the "Component Island" problem where features are ported in isolation but never wired into parent pages
+8. **Placeholder Handler Detection**: Scan for non-functional event handlers in non-test source files:
+   - `console.log` inside onClick/onSubmit/onChange handlers → **must-fix**
+   - `() => {}` or `() => { }` as handler values → **must-fix**
+   - `alert(` as a substitute for real functionality → **must-fix**
+   - Navigation handlers that don't call router navigation → **must-fix**
+   - These are silent placeholders that pass all tests but produce a broken user experience
+9. **Integration Verification**: For every page-level component:
+   - Verify ALL child components from the source page are imported and rendered in the target page
+   - Verify a page composition test exists that checks children render inside the parent
+   - If child components exist as standalone files but are never rendered in their parent → **must-fix**
 
 For each issue: `file:line — severity (must-fix|nice-to-have) — source behavior — target behavior — suggested fix`
 
@@ -51,6 +66,11 @@ Compare source test suite against target test suite:
    - Tests that mock the function they're supposed to test → must-fix
    - Tests that don't assert on actual output values → must-fix
 4. **False confidence tests**: Tests that assert on implementation details (CSS classes, internal state shape) instead of behavior
+5. **Page composition test coverage**: For every page-level component:
+   - Does a composition test exist that verifies ALL child components render inside the parent?
+   - Does the composition test verify interactive elements produce real effects (not just that they exist)?
+   - If composition tests are missing → must-fix
+   - A component can pass all its unit tests while being completely orphaned from the app — composition tests are the only way to catch this
 
 For each gap: `source test file — what it tests — target equivalent (or MISSING) — action needed`
 

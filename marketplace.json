@@ -1,0 +1,17 @@
+{
+  "version": "1.0.0",
+  "plugins": [
+    {
+      "id": "dmail",
+      "name": "D-Mail",
+      "description": "Autonomous project builder — ideates, codes, tests, reviews, and iterates indefinitely from a single prompt",
+      "source": { "path": "./plugins/dmail" }
+    },
+    {
+      "id": "port",
+      "name": "Worldline Shift",
+      "description": "Comprehensive code project porting — migrates a codebase from one tech stack to another with 1:1 feature parity",
+      "source": { "path": "./plugins/port" }
+    }
+  ]
+}

@@ -1,0 +1,8 @@
+{
+  "name": "port",
+  "version": "1.0.0",
+  "description": "Comprehensive code project porting — migrates a codebase from one tech stack to another with 1:1 feature parity",
+  "author": {
+    "name": "bhonris"
+  }
+}
