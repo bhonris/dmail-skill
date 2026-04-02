@@ -110,10 +110,13 @@ If a circular dependency exists (F-A depends on F-B depends on F-A), document it
 ## Status Key
 - `not-started` — not yet ported
 - `in-progress` — currently being ported
-- `ported` — code written, basic tests pass
-- `verified` — parity tests confirm identical behavior to source
+- `coded` — component file exists, unit tests pass (but may not be wired into parent page)
+- `integrated` — component is imported and rendered in its parent page, event handlers are functional, navigation works, composition tests pass
+- `verified` — parity tests + Playwright confirm identical behavior to source
 - `ported-with-gap` — ported but with documented behavioral difference (platform limitation)
 - `deferred` — skipped for now, will retry later
+
+**IMPORTANT**: A feature only counts toward parity % when it reaches `integrated` status, not `coded`. A component that exists but is never rendered in its parent page is an orphan — it provides zero value to the user.
 
 ## Known Gaps
 [To be filled during migration — platform-specific features with no direct equivalent]
@@ -127,12 +130,21 @@ If a circular dependency exists (F-A depends on F-B depends on F-A), document it
 
 Given the source feature inventory AND the target project's current state, verify that each ported feature actually matches source behavior.
 
-For each feature marked as `ported`:
+For each feature marked as `coded` or `integrated`:
 
 1. **Read the source implementation** — understand exact behavior
-2. **Read the target implementation** — check it matches
-3. **Read the parity tests** — verify they actually test the right things
-4. **Verdict**: `verified` | `parity-gap` | `regression`
+2. **Read the source parent page** — understand how this component is rendered and integrated
+3. **Read the target implementation** — check it matches
+4. **Verify integration** — check the component is actually wired into the app:
+   - Is it imported by its parent page? (If not → `parity-gap`, reason: orphan component)
+   - Is it rendered in the parent's JSX/template? (If not → `parity-gap`)
+   - Are event handlers functional? (If `console.log` or `() => {}` → `parity-gap`, reason: placeholder handler)
+   - Do navigation targets exist and route correctly? (If not → `parity-gap`)
+5. **Read the parity tests** — verify they actually test the right things
+6. **Check for composition tests** — does a test exist that renders the parent and verifies this component appears inside it?
+7. **Verdict**: `verified` | `parity-gap` | `regression`
+   - A feature CANNOT be `verified` if it fails any integration check (step 4)
+   - A feature CANNOT be `verified` if composition tests are missing (step 6)
 
 Report format:
 ```markdown
@@ -140,6 +152,8 @@ Report format:
 
 **Source behavior**: [what source does]
 **Target behavior**: [what target does]
+**Integration status**: [wired into parent | ORPHAN — not imported | PLACEHOLDER — handler not functional]
+**Composition test**: [exists and passes | MISSING]
 **Gap**: [none | description of difference]
 **Test coverage**: [adequate | insufficient — what's missing]
 **Action needed**: [none | description]
@@ -155,6 +169,9 @@ Action items: [list]
 
 **Rules**:
 - Never approve a feature as "verified" if the parity test could pass even with wrong behavior
+- Never approve a feature as "verified" if it is not imported and rendered by its parent page (orphan component)
+- Never approve a feature as "verified" if its event handlers are placeholders (`console.log`, `() => {}`)
+- Never approve a feature as "verified" if page composition tests are missing
 - Flag any hardcoded values that differ between source and target
 - Flag any error handling differences (different error messages are ok, different error behavior is not)
 - Flag any missing edge case handling
