@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What This Repository Is
 
-This is a **Claude Code skills/plugins repository** — a collection of custom slash commands, agents, and hooks that extend Claude Code's capabilities. The flagship skill is **D-Mail**, an autonomous project builder that runs indefinitely from a single prompt. The second skill is **Port** (Worldline Shift), an autonomous project porting tool that migrates codebases across tech stacks with 1:1 feature parity.
+This is a **Claude Code skills/plugins repository** — a collection of custom slash commands, agents, and hooks that extend Claude Code's capabilities. The flagship skill is **D-Mail**, an autonomous project builder that runs indefinitely from a single prompt. The second skill is **Port** (Worldline Shift), an autonomous project porting tool that migrates codebases across tech stacks with 1:1 feature parity. The third skill is **Echelon**, an exhaustive Playwright-based QA tool named after SERN's surveillance network — enumerates every page and interactive element, tests each one with evidence-backed assertions, and produces a structured health report.
 
 ## Repository Structure
 
@@ -29,19 +29,22 @@ claude_skills/
     │   └── hooks/
     │       ├── hooks.json            # Hook registration manifest
     │       └── stop-hook.sh          # Session-to-session loop controller
-    └── port/
-        ├── commands/
-        │   ├── worldline-shift.md    # Main skill (porting phase logic)
-        │   └── cancel-worldline-shift.md  # Halt command
-        ├── agents/
-        │   ├── suzuha.md             # Source analyzer + parity mapper + verifier
-        │   ├── ruka.md               # Data model & API contract mapper
-        │   ├── daru-port.md          # Parity-driven coder (port-specific)
-        │   ├── kurisu-port.md        # Mapping-focused architect (port-specific)
-        │   └── future-okabe-port.md  # Parity-focused reviewer (port-specific)
-        └── hooks/
-            ├── hooks.json            # Hook registration manifest
-            └── stop-hook.sh          # Session-to-session loop controller
+    ├── port/
+    │   ├── commands/
+    │   │   ├── worldline-shift.md    # Main skill (porting phase logic)
+    │   │   └── cancel-worldline-shift.md  # Halt command
+    │   ├── agents/
+    │   │   ├── suzuha.md             # Source analyzer + parity mapper + verifier
+    │   │   ├── ruka.md               # Data model & API contract mapper
+    │   │   ├── daru-port.md          # Parity-driven coder (port-specific)
+    │   │   ├── kurisu-port.md        # Mapping-focused architect (port-specific)
+    │   │   └── future-okabe-port.md  # Parity-focused reviewer (port-specific)
+    │   └── hooks/
+    │       ├── hooks.json            # Hook registration manifest
+    │       └── stop-hook.sh          # Session-to-session loop controller
+    └── sweep/
+        └── commands/
+            └── echelon.md            # Echelon — SERN surveillance protocol, exhaustive Playwright QA
 ```
 
 ## D-Mail: How It Works
@@ -128,7 +131,7 @@ Port takes a **source project** in one tech stack and autonomously migrates it t
 | 3 | Convergence Architecture | Kurisu proposes Alpha (direct map) + Beta (idiomatic) target architectures |
 | 4 | Worldline Migration | Page-composition TDD porting: Moeka reads source+parent → Daru ports with parity+composition tests |
 | 4c | Integration Wiring | Verify all components wired into parents, orphan scan, composition test check (every 3 leaps) |
-| 4b | Cross-Worldline Verification | Per-page, per-button Playwright browser verification for web targets |
+| 4b | Cross-Worldline Verification | Playwright verification for web targets — **Mode A** (source also runnable): boots both apps, mirrors every interaction side-by-side; **Mode B** (non-web source): target-only against feature inventory |
 | 5 | Divergence Audit | Future Okabe ×3 review with parity, orphan detection, and placeholder scan focus |
 | 6 | Convergence Fix | Fix all must-fix review items |
 | 6b | Parity Verification | Suzuha verifies every "ported" feature matches source (integration + behavior) |
@@ -192,6 +195,53 @@ Skill test runs are kept out of git using the `fg_exp_` prefix convention:
 
 When running `/dmail` for skill testing, `cd` into `claude_skills/` first so the experiment directory is created here and automatically ignored.
 
+## Echelon: How It Works
+
+### What It Does
+
+Echelon (named after SERN's all-seeing surveillance network) is a standalone, single-session Playwright QA skill. Given any running web app (or a project path to start), it:
+
+1. **Enumerates** every route and every interactive element into `echelon/manifest.json` (committed to git before testing begins)
+2. **Tests** each element with required Playwright evidence — accessibility snapshot quotes, screenshots, and actual behavior descriptions
+3. **Reports** a structured health score in `echelon/ECHELON_REPORT.md`
+
+### Key Differentiator: Deterministic Feedback
+
+Echelon is designed so the AI cannot self-certify passing tests. Eight rules enforce this:
+
+| Rule | What it prevents |
+|------|-----------------|
+| No evidence → no pass | AI claiming elements pass without quoting the accessibility snapshot |
+| No screenshot → no page visit | AI claiming a page was visited without the screenshot file on disk |
+| Manifest immutable after commit | AI retroactively removing elements from scope |
+| Count must match before reporting | AI generating a partial report and calling it complete |
+| Console errors are mandatory findings | AI silently ignoring JS exceptions |
+| Dead buttons are failures | AI accepting no-op click handlers as passing |
+| Placeholder handlers are failures | AI accepting `console.log` / `// TODO` handlers as implemented |
+| Snapshot diff must be stated | AI writing "button clicked successfully" without describing what changed |
+
+### No Agents, No Hooks
+
+Echelon is single-session and has no cross-session loop. No stop hook, no agents — the main skill prompt does everything.
+
+### Usage
+
+```
+/echelon http://localhost:5173       # test a running app
+/echelon ./my-project                # auto-start dev server, then test
+/echelon ./my-project --pages-only   # page load verification only
+/echelon ./my-project --report-only  # regenerate report from existing results
+```
+
+### Output Files
+
+- `echelon/manifest.json` — enumerated routes and elements (git-committed, immutable after Phase 1)
+- `echelon/results.json` — per-element results with snapshot evidence
+- `echelon/screenshots/` — one screenshot per page visit
+- `echelon/ECHELON_REPORT.md` — human-readable health report
+
+---
+
 ## Thematic Naming (Steins;Gate)
 
 All naming is thematic — it's cosmetic, not functional:
@@ -209,3 +259,4 @@ All naming is thematic — it's cosmetic, not functional:
 - "Mayuri" = user-perspective final reviewer before a worldline is declared stable
 - "Suzuha" = the time traveler who has seen both worldlines (source analyzer + parity verifier)
 - "Ruka" = the one who exists in both worldlines (data contract mapper)
+- "Echelon" = SERN's all-seeing surveillance network — `/echelon` intercepts every element, logs every error, misses nothing

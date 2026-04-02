@@ -96,6 +96,9 @@ review_items:
 max_iterations: [N]
 push_to_github: [true|false]
 bypass_playwright: [true|false]
+source_runnable: [true|false]
+source_dev_cmd: [null or detected command]
+source_dev_port: [null or N]
 type_check_cmd: [null or detected command]
 build_cmd: [null or detected command]
 parity_test_cmd: [null or derived run command]
@@ -118,6 +121,22 @@ localization_file_pattern: [null or detected glob/path]
    - `--push-to-github` — default false
    - `--bypass-playwright` — explicit opt-out of Playwright gate (CLI/API/library projects only)
 2. **Validate source**: Confirm `source_path` exists and contains recognizable project files.
+2b. **Detect source runnability** — determine if the source app can be started as a dev server for side-by-side Playwright comparison:
+   - Check `source_stack` and look for a runnable dev server command:
+     | Source stack | Dev command | Default port |
+     |---|---|---|
+     | React/Vite (`package.json` with vite) | `pnpm dev` or `npm run dev` | 5173 |
+     | React CRA | `npm start` | 3000 |
+     | Next.js | `pnpm dev` or `npm run dev` | 3000 |
+     | Vue/Vite | `pnpm dev` or `npm run dev` | 5173 |
+     | Svelte | `pnpm dev` | 5173 |
+     | Angular | `ng serve` | 4200 |
+     | Flutter web (`pubspec.yaml`) | `flutter run -d web-server --web-port 8080` | 8080 |
+     | Python (Flask/FastAPI with `app.py` or `main.py`) | `python app.py` or `uvicorn main:app` | 5000/8000 |
+     | Other | `null` (non-runnable) |
+   - If a dev command is found: set `source_runnable: true`, `source_dev_cmd: [command]`, `source_dev_port: [port]`
+   - If not found or source is mobile/desktop native: set `source_runnable: false`, `source_dev_cmd: null`, `source_dev_port: null`
+   - Write these three fields to `worldline-shift.md`
 3. **Auto-detect source stack** if not specified:
    - `pubspec.yaml` → Flutter/Dart
    - `build.gradle` + `AndroidManifest.xml` → Android (Kotlin/Java)
@@ -501,31 +520,92 @@ When criteria met → **Phase 4c** (Integration Wiring) → **Phase 4b** (web ta
      The user must add and start Playwright MCP (claude mcp add playwright npx @playwright/mcp@latest), restart Claude Code, and re-invoke /worldline-shift to continue.
      ```
      Then commit state and stop. Do NOT advance to Phase 5. Do NOT skip Phase 4b. Do NOT mark features as verified.
-2. Start target dev server.
-3. **For EACH page in the app** (not just critical flows — every page):
+
+2. **Select verification mode** based on `source_runnable` in `worldline-shift.md`:
+   - `source_runnable: true` → **Mode A** (side-by-side mirroring)
+   - `source_runnable: false` → **Mode B** (target-only against feature inventory)
+
+---
+
+### Mode A — Side-by-Side Mirroring (source_runnable: true)
+
+Boot both apps simultaneously and mirror every interaction, comparing behavior in real time.
+
+1. **Start both dev servers**:
+   - Source: run `source_dev_cmd` from `source_path`, serving on `source_dev_port`
+   - Target: run target dev server from `target_path`, serving on `dev_server_port`
+   - Wait for both to be ready (HTTP 200 on `/`) before proceeding
+   - If either fails to start → fall back to **Mode B** and log: `"Mode A fallback: [source|target] dev server failed to start — using feature inventory verification instead"`
+
+2. **For EACH page in the app** (every route in `documents/source-map.md`):
+   a. Navigate to the source page (`source_dev_port/[route]`) — take screenshot → save as `echelon/screenshots/source_[route].png`
+   b. Navigate to the target page (`dev_server_port/[route]`) — take screenshot → save as `echelon/screenshots/target_[route].png`
+   c. Take accessibility snapshot of both pages
+   d. **Compare structure**: Every heading, label, button, link, and form control present in the source snapshot must have a structural equivalent in the target snapshot. Name/label may differ (e.g. framework-specific wording) but the element type and purpose must match.
+   e. **Mirror interactions** — for EACH interactive element on the source page:
+      - Perform the same action on the source (click/type/select) → record what changed (navigation, dialog, state update)
+      - Perform the identical action on the target → record what changed
+      - Compare: the target's response must match the source's response in behavior (not necessarily pixel-perfect)
+      - Take before/after screenshots on both sides for each interaction
+   f. **Divergence logging**: For any mismatch, log to `echelon/results.json`:
+      ```json
+      {
+        "page": "/route",
+        "element": "element description",
+        "source_behavior": "what happened on source",
+        "target_behavior": "what happened on target",
+        "verdict": "FAIL | WARN",
+        "screenshot_source_before": "path",
+        "screenshot_source_after": "path",
+        "screenshot_target_before": "path",
+        "screenshot_target_after": "path"
+      }
+      ```
+
+3. **Failure criteria** (any of these = FAIL, back to Phase 4):
+   - Element present in source snapshot but absent from target snapshot
+   - Source action produces navigation; target action does nothing or 404s
+   - Source action opens a dialog; target has no dialog response
+   - Source form submits and shows confirmation; target has no confirmation
+   - Target page renders blank or shows placeholder text where source shows real content
+   - Console errors on target that are absent on source
+
+4. Document all discrepancies with page, element, source behavior, target behavior.
+5. If failures found → back to **Phase 4** to fix, then re-run **Phase 4c** → **Phase 4b** again.
+6. If all mirrored pages pass → mark passing features as `verified` in parity matrix.
+7. **Route**: if unported features remain → back to **Phase 4**. If all features `verified` → **Phase 5**.
+
+---
+
+### Mode B — Target-Only Verification (source_runnable: false)
+
+Source cannot be booted (native mobile, desktop, non-web). Verify the target against the feature inventory instead.
+
+1. Start target dev server.
+2. **For EACH page in the app** (not just critical flows — every page):
    a. Navigate to the page
    b. Take accessibility snapshot
    c. Verify EVERY child component from the source page is present in the snapshot — cross-reference the feature inventory's source file list
    d. Click EVERY interactive element (buttons, links, tabs, form controls)
    e. Verify each click produces the expected result:
-   - Navigation buttons → navigate to correct route (not 404, not blank)
-   - Dialog triggers → dialog opens with correct content
-   - Form submissions → submit handler fires (not console.log)
-   - Tab switches → correct tab content appears
-   - Toggle/checkbox → state changes visually
-     f. Compare against source feature inventory — every user action listed must work
+      - Navigation buttons → navigate to correct route (not 404, not blank)
+      - Dialog triggers → dialog opens with correct content
+      - Form submissions → submit handler fires (not console.log)
+      - Tab switches → correct tab content appears
+      - Toggle/checkbox → state changes visually
+   f. Compare against source feature inventory — every user action listed must work
 
-4. **Failure criteria** (any of these = FAIL, back to Phase 4):
+3. **Failure criteria** (any of these = FAIL, back to Phase 4):
    - Button/link exists but does nothing on click
    - Component listed in source page but missing from target snapshot
    - Navigation target returns 404 or renders blank page
    - Tab content is placeholder text instead of real component
    - Interactive element triggers `console.log` instead of real action
 
-5. Document all discrepancies with page, element, expected behavior, actual behavior.
-6. If failures found → back to **Phase 4** to fix the specific features, then re-run **Phase 4c** → **Phase 4b** again.
-7. If all integrated pages pass → mark passing features as `verified` in parity matrix.
-8. **Route**: if unported features remain in the parity matrix → back to **Phase 4**. If all features are `verified` → **Phase 5**.
+4. Document all discrepancies with page, element, expected behavior, actual behavior.
+5. If failures found → back to **Phase 4** to fix the specific features, then re-run **Phase 4c** → **Phase 4b** again.
+6. If all integrated pages pass → mark passing features as `verified` in parity matrix.
+7. **Route**: if unported features remain in the parity matrix → back to **Phase 4**. If all features are `verified` → **Phase 5**.
 
 ---
 
