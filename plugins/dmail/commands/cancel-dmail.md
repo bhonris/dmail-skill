@@ -22,7 +22,7 @@ Halt the active D-Mail loop in the current directory.
    **Worldline preserved in git at**: [git rev-parse HEAD]
    ```
 
-4. Update `reading-steiner.md`: set `phase: cancelled`, `mayuri_rework_count: 0`
+4. Update `reading-steiner.md`: set `phase: cancelled`, `maho_rework_count: 0`
 
 5. Commit: `git add -A && git commit -m "steiner: cancelled at leap [N], cycle [expansion_cycle]"`
 

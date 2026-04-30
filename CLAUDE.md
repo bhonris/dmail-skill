@@ -24,7 +24,8 @@ claude_skills/
     │   │   ├── daru.md               # Coder (Super Hacker)
     │   │   ├── kurisu.md             # Architecture proposer (dual-worldline)
     │   │   ├── moeka.md              # Codebase explorer (reads before building)
-    │   │   ├── mayuri.md             # User reviewer (final usability check)
+    │   │   ├── mayuri.md             # Visual/UI reviewer (cosplayer's eye for aesthetic coherence)
+    │   │   ├── maho.md               # System critic (holistic coherence, flow, loop-back owner)
     │   │   └── future-okabe.md       # Parallel code reviewers (3 dimensions)
     │   └── hooks/
     │       ├── hooks.json            # Hook registration manifest
@@ -87,7 +88,8 @@ Each agent has a specific role and is spawned at defined phases:
 - **Kurisu** → Phase 2 (two competing architecture proposals)
 - **Moeka** → Before each feature (reads existing codebase to prevent duplication)
 - **Future Okabe** → Phase 4 (3 parallel reviewers: simplicity, bugs/security, test coverage)
-- **Mayuri** → Phase 6 (user-perspective final review; if she finds a genuine usability gap, loops back to Phase 3)
+- **Maho** → Phase 6 (system-level critic — holistic coherence, flow, cognitive load, claims vs. reality; inherits Mayuri's CODE-LEVEL GAP / DOCUMENTATION GAP / NO ISSUES classification and loop-back logic)
+- **Mayuri** → Phase 6 (visual/UI reviewer — cosplayer's eye for aesthetic coherence, layout readability, feedback clarity; web and game projects only; VISUAL GAP / POLISH NOTE / LOOKS GOOD classification; findings logged, does not trigger its own loop-back)
 
 ### Stop Hook Behavior
 
@@ -256,7 +258,8 @@ All naming is thematic — it's cosmetic, not functional:
 - "Attractor Field" = the set of features that must remain constant across worldlines (parity matrix)
 - "Convergence" = making the target match the source's functionality
 - "Cheshire Break" = Faris NyanNyan's market research phase (existing solutions, differentiation gaps)
-- "Mayuri" = user-perspective final reviewer before a worldline is declared stable
+- "Mayuri" = visual/UI reviewer — cosplayer's eye for aesthetic coherence and readability
+- "Maho" = system critic — holistic coherence, flow, cognitive load; owns the loop-back gate
 - "Suzuha" = the time traveler who has seen both worldlines (source analyzer + parity verifier)
 - "Ruka" = the one who exists in both worldlines (data contract mapper)
 - "Echelon" = SERN's all-seeing surveillance network — `/echelon` intercepts every element, logs every error, misses nothing

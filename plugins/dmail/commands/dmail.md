@@ -90,7 +90,7 @@ last_test_run: "[N pass, N fail summary]"
 closed_worldlines: [list of completed phases this cycle]
 next_action: "[specific next action to take]"
 sern_interference_count: [0-N, resets each cycle]
-mayuri_rework_count: [0-N, resets each cycle]
+maho_rework_count: [0-N, resets each cycle]
 decisions:
   - architecture: "[chosen approach]"
   - testing: "[test framework and target]"
@@ -459,33 +459,45 @@ The lab does not stop when criteria are met. It checkpoints and expands.
    **Also update `USAGE.md`**: find the test count / coverage line in USAGE.md (usually in a "Running Tests" or "Development" section) and update it to the current values (`[N] tests`, `[coverage_pct]%`). This number drifts stale across expansion cycles if not explicitly refreshed here.
 5. Update `DOSSIER.md` — mark expansion cycle N complete, record what was achieved. Specifically:
    a. Update the `## Current status` or `## Overview` section (whichever exists) to set Phase to `[phase]`, Leap to `[leap_count]/[max_iterations]`, Cycle to `[expansion_cycle]`, and Divergence meter to `[coverage_pct]%`. If neither section exists, add `## Current status` at the top of the file.
-   b. In the `## Acceptance Criteria` section of DOSSIER.md, check the box (`- [x]`) for every criterion that has been met this cycle. A criterion is met if it was implemented by Daru AND verified by tests AND (for visual criteria) confirmed by Phase 3b. Do not leave all boxes unchecked through the entire run — checked boxes show Mayuri and future sessions what is complete.
+   b. In the `## Acceptance Criteria` section of DOSSIER.md, check the box (`- [x]`) for every criterion that has been met this cycle. A criterion is met if it was implemented by Daru AND verified by tests AND (for visual criteria) confirmed by Phase 3b. Do not leave all boxes unchecked through the entire run — checked boxes show Maho and future sessions what is complete.
 6. Update `documents/steiner-spec.md` Open Questions with all assumptions made this cycle
 7. Add checkpoint entry to `STEINER_LOG.md`: `## Worldline [N] Stabilised`
 
-**Cycle Reflection** (write before spawning Mayuri):
+**Cycle Reflection** (write before spawning reviewers):
 
 Append one new entry to `lessons_learned` in `reading-steiner.md` (do not overwrite existing entries — add to the list):
 - Format: `"cycle [N]: [primary SERN cause or 'none']; [anti-pattern to avoid next cycle]; [1 thing that worked well]"`
 - Example: `"cycle 2: async race condition caused 3 stuck leaps; avoid shared mutable state in test helpers; TDD from spec checkboxes kept scope tight"`
 Keep each entry to one line. Existing entries carry forward to inform Phase 7.
 
-**Lab member — Mayuri (User Reviewer)**:
+**Lab member — Maho (System Critic)**:
 
 Spawn a general-purpose agent:
 
-> You are Mayuri Shiina. You are not a programmer. Read the USAGE.md and DOSSIER.md below and answer honestly as someone trying to use this for the first time. [paste USAGE.md and DOSSIER.md contents]
+> You are Hiyajo Maho. You built Amadeus. Read the USAGE.md and DOSSIER.md below and review this system for coherence, flow, cognitive load, and whether it actually does what it claims. [paste USAGE.md and DOSSIER.md contents]
 
-Classify Mayuri's response into one of three categories:
+Classify Maho's response into one of three categories:
 
 - **Code-level gap** — user cannot complete a core flow, gets an error, or a primary feature doesn't work as described. This is a genuine blocker.
-  - If `mayuri_rework_count < 2`: treat as `must_fix`. Increment `mayuri_rework_count`. Update `current_focus` with the issue, set `phase: time-leap-development`, commit `steiner: mayuri-review — usability gap found`, loop back to Phase 3.
-  - If `mayuri_rework_count >= 2`: log as `nice_to_have` in `review_items`. Do not loop back — this expansion cycle is done.
+  - If `maho_rework_count < 2`: treat as `must_fix`. Increment `maho_rework_count`. Update `current_focus` with the issue, set `phase: time-leap-development`, commit `steiner: maho-review — system gap found`, loop back to Phase 3.
+  - If `maho_rework_count >= 2`: log as `nice_to_have` in `review_items`. Do not loop back — this expansion cycle is done.
 - **Documentation gap** — instructions unclear, example missing, output confusing but the feature works. Log as `nice_to_have` in `review_items`. Continue without looping.
 - **No issues** — the worldline is stable. Continue.
 
+**Lab member — Mayuri (Visual Reviewer)** (web and game projects only):
+
+Spawn a general-purpose agent with screenshots or a UI description:
+
+> You are Mayuri Shiina. You make costumes and care about how things look. Review the UI of this project for visual coherence, readability, and aesthetic fit. [paste screenshots or UI description and DOSSIER.md contents]
+
+Classify Mayuri's response:
+
+- **Visual gap** — something in the UI actively hurts usability or breaks the visual theme. Log as `must_fix` in `review_items` (does not loop back — visual gaps are addressed in the next expansion cycle unless they are also code-level blockers).
+- **Polish note** — something looks off but doesn't break anything. Log as `nice_to_have` in `review_items`.
+- **Looks good** — no action needed.
+
 8. If `push_to_github: true` → use GitHub MCP: create/update repo, push, create release tag
-9. Increment `expansion_cycle`, clear `closed_worldlines`, reset `sern_interference_count` to 0, reset `mayuri_rework_count` to 0
+9. Increment `expansion_cycle`, clear `closed_worldlines`, reset `sern_interference_count` to 0, reset `maho_rework_count` to 0
 10. `git add -A && git commit -m "steiner: worldline-[N]-stable"`
 11. Advance state → `worldline-expansion`
 
@@ -627,7 +639,7 @@ Before this session ends:
 3. Increment `leap_count` in state
 4. Write clear `next_action` and `current_focus` — specific enough that a fresh session can act immediately without reading the full state
 5. **Update `sern_no_progress_streak`**: check `git log --oneline -1` — if you made at least one `steiner:` commit this session, set `sern_no_progress_streak: 0`; otherwise increment it by 1.
-6. Save `reading-steiner.md` with ALL fields from the format spec present. Re-read the format spec above and verify: phase, leap_count, expansion_cycle, session_id, prev_head, original_prompt, project_name, project_type, spec_path, test_cmd, dev_server_port, coverage_pct, divergence_readings, current_focus, blocked_on, last_test_run, closed_worldlines, next_action, sern_interference_count, mayuri_rework_count, decisions, review_items, max_iterations, push_to_github, bypass_playwright, sern_no_progress_streak, lessons_learned — all must be present.
+6. Save `reading-steiner.md` with ALL fields from the format spec present. Re-read the format spec above and verify: phase, leap_count, expansion_cycle, session_id, prev_head, original_prompt, project_name, project_type, spec_path, test_cmd, dev_server_port, coverage_pct, divergence_readings, current_focus, blocked_on, last_test_run, closed_worldlines, next_action, sern_interference_count, maho_rework_count, decisions, review_items, max_iterations, push_to_github, bypass_playwright, sern_no_progress_streak, lessons_learned — all must be present.
 7. `git add reading-steiner.md STEINER_LOG.md DOSSIER.md USAGE.md && git commit --amend --no-edit` if these weren't committed, OR add a final commit: `git add -A && git commit -m "steiner: state [phase] leap-[N]"` if there are uncommitted state changes
 
 The stop hook generates a focused brief from `current_focus`, `next_action`, and key state fields — not the full file. Write those fields well.
